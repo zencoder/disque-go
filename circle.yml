@@ -1,0 +1,17 @@
+machine:
+  services:
+    - docker
+checkout:
+  post:
+    - rm -rf ~/.go_workspace/src/github.com/skidder
+    - mkdir -p ~/.go_workspace/src/github.com/skidder
+    - cp -R ~/disque-go ~/.go_workspace/src/github.com/skidder/disque-go
+dependencies:
+  override:
+    - go get github.com/tools/godep
+    - go get golang.org/x/tools/cmd/cover
+test:
+  override:
+    - cd ~/.go_workspace/src/github.com/skidder/disque-go && make test
+  post:
+    - cd ~/.go_workspace/src/github.com/skidder/disque-go && make cover
