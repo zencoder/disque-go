@@ -25,6 +25,20 @@ func (s *URLHandlerSuite) SetupSuite() {
 	s.setupEnvVars()
 }
 
-func (s *URLHandlerSuite) TestURLFunction() {
-	assert.Equal(s.T(), "disque://example.com", url("example.com"))
+func (s *URLHandlerSuite) TestInitWithOneNode() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts)
+	assert.NotNil(s.T(), d)
+
+	d.Initialize()
+	assert.EqualValues(s.T(), 1, len(d.nodes))
+}
+
+func (s *URLHandlerSuite) TestInitWithZeroNodes() {
+	hosts := []string{"127.0.0.1:8800"}
+	d := NewDisque(hosts)
+	assert.NotNil(s.T(), d)
+
+	assert.NotNil(s.T(), d.Initialize())
+	assert.EqualValues(s.T(), 0, len(d.nodes))
 }
