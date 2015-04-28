@@ -21,6 +21,15 @@ func (s *DisqueSuite) SetupTest() {
 func (s *DisqueSuite) SetupSuite() {
 }
 
+func (s *DisqueSuite) TestInitAndCloseWithOneNode() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+
+	d.Initialize()
+
+	assert.Nil(s.T(), d.Close())
+}
+
 func (s *DisqueSuite) TestInitWithOneNode() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
@@ -142,4 +151,14 @@ func (s *DisqueSuite) TestPickClientWithTwoHostStatsUnreachableOptimalHost() {
 	assert.Equal(s.T(), "host1", d.prefix)
 	assert.Equal(s.T(), "example.com:7711", d.host)
 	assert.Equal(s.T(), 2, len(d.stats))
+}
+
+func (s *DisqueSuite) TestPush() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	err := d.Push("queue1", "asdf", 100)
+
+	assert.Nil(s.T(), err)
 }

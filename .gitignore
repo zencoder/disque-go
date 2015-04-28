@@ -23,3 +23,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# Nodes file created by Disque server
+nodes.conf

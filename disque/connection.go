@@ -43,6 +43,19 @@ func (d *Disque) Initialize() (err error) {
 	return d.explore()
 }
 
+func (d *Disque) Close() error {
+	return d.client.Close()
+}
+
+func (d *Disque) Push(queueName string, job string, timeout int64) (err error) {
+	if _, err = d.client.Do("ADDJOB", queueName, job, timeout); err != nil {
+		if err = d.explore(); err != nil {
+			_, err = d.client.Do("ADDJOB", queueName, job, timeout)
+		}
+	}
+	return
+}
+
 func (d *Disque) pickClient() (err error) {
 	if d.count == d.cycle {
 		d.count = 0
