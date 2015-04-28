@@ -18,7 +18,6 @@ type Disque struct {
 	stats  map[string]int
 	prefix string
 	client redis.Conn
-	scout  redis.Conn
 	host   string
 }
 
@@ -119,10 +118,11 @@ func (d *Disque) explore() (err error) {
 	d.nodes = map[string]string{}
 
 	for _, host := range d.servers {
-		if d.scout, err = redis.Dial("tcp", host); err == nil {
-			defer d.scout.Close()
+		var scout redis.Conn
+		if scout, err = redis.Dial("tcp", host); err == nil {
+			defer scout.Close()
 
-			if lines, err := redis.String(d.scout.Do("CLUSTER", "NODES")); err == nil {
+			if lines, err := redis.String(scout.Do("CLUSTER", "NODES")); err == nil {
 				for _, line := range strings.Split(lines, "\n") {
 					if strings.TrimSpace(line) != "" {
 						fields := strings.Fields(line)
