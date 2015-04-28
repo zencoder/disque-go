@@ -16,9 +16,15 @@ go get github.com/zencoder/disque-go
 ###Usage
 Begin by instantiating and initializing a Disque client:
 ```go
+import (
+  "github.com/zencoder/disque-go/disque"
+)
+
+...
+
 hosts := []string{"127.0.0.1:7711"} // array of 1 or more Disque servers
 cycle := 1000                       // check connection stats every 1000 Fetch's
-d := NewDisque(hosts, cycle)
+d := disque.NewDisque(hosts, cycle)
 err := d.Initialize()
 ```
 This will yield a Disque client instance `d` that is configured to use the Disque server at 127.0.0.1:7711 and its cluster members, if any.
