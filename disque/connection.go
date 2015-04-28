@@ -59,12 +59,21 @@ func (d *Disque) Push(queueName string, job string, timeout int64) (err error) {
 	return
 }
 
+// Acknowledge receipt and processing of a message
+func (d *Disque) Ack(messageId string) (err error) {
+	if _, err = d.client.Do("ACKJOB", messageId); err != nil {
+		if err = d.explore(); err == nil {
+			_, err = d.client.Do("ACKJOB", messageId)
+		}
+	}
+	return
+}
+
 // Fetch job from a Disque queue
 func (d *Disque) Fetch(queueName string, count int32, timeout int64) (jobs []*Job, err error) {
 	jobs = make([]*Job, 0)
 	if err = d.pickClient(); err == nil {
 		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", timeout, "COUNT", count, "FROM", queueName)); err == nil {
-			log.Printf("Raw job info: %s", values)
 			for _, job := range values {
 				if jobValues, err := redis.Strings(job, err); err == nil {
 					jobs = append(jobs, &Job{QueueName: jobValues[0], MessageId: jobValues[1], Message: jobValues[2]})
@@ -106,16 +115,12 @@ func (d *Disque) explore() (err error) {
 	d.nodes = map[string]string{}
 
 	for _, host := range d.servers {
-		log.Printf("Evaluating host: %s", host)
-
 		if d.scout, err = redis.Dial("tcp", host); err == nil {
-			log.Println("Connected to host, finding nodes")
 			defer d.scout.Close()
 
 			if lines, err := redis.String(d.scout.Do("CLUSTER", "NODES")); err == nil {
 				for _, line := range strings.Split(lines, "\n") {
 					if strings.TrimSpace(line) != "" {
-						log.Printf("Identifying fields for cluster line: %s", line)
 						fields := strings.Fields(line)
 
 						id := fields[0]

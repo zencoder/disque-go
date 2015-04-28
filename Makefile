@@ -18,7 +18,7 @@ cover:
 	$(GO) tool cover -html=$(COVERAGEDIR)/disque.coverprofile -o $(COVERAGEDIR)/disque.html
 tc: test cover
 bench:
-	$(GO) test -bench ./...
+	$(GO) test ./... -bench .
 clean:
 	$(GO) clean
 	rm -rf coverage/
