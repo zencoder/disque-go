@@ -12,10 +12,14 @@ type Disque struct {
 	servers []string
 	cycle   int32
 
+	count int32
+
 	nodes  map[string]string
+	stats  map[string]int
 	prefix string
 	client redis.Conn
 	scout  redis.Conn
+	host   string
 }
 
 const (
@@ -28,6 +32,8 @@ func NewDisque(servers []string, cycle int32) *Disque {
 	return &Disque{
 		servers: servers,
 		cycle:   cycle,
+		nodes:   make(map[string]string),
+		stats:   make(map[string]int),
 	}
 }
 
@@ -35,6 +41,32 @@ func NewDisque(servers []string, cycle int32) *Disque {
 // participating in the cluster.
 func (d *Disque) Initialize() (err error) {
 	return d.explore()
+}
+
+func (d *Disque) pickClient() (err error) {
+	if d.count == d.cycle {
+		d.count = 0
+		sortedHosts := ReverseSortMapByValue(d.stats)
+
+		if len(sortedHosts) > 0 {
+			optimalHostId := sortedHosts[0].Key
+			if optimalHostId != d.prefix {
+				// a different optimal host has been discovered
+				if val, ok := d.nodes[optimalHostId]; ok {
+					// configure main client
+					if d.client, err = redis.Dial("tcp", d.nodes[optimalHostId]); err == nil {
+						// keep track of selected node
+						d.prefix = optimalHostId
+						d.host = val
+
+						// clear stats
+						d.stats = make(map[string]int)
+					}
+				}
+			}
+		}
+	}
+	return
 }
 
 func (d *Disque) explore() (err error) {
