@@ -141,7 +141,7 @@ func optionsToArguments(options map[string]string) (arguments []string) {
 func (d *Disque) pickClient() (err error) {
 	if d.count == d.cycle {
 		d.count = 0
-		sortedHosts := ReverseSortMapByValue(d.stats)
+		sortedHosts := reverseSortMapByValue(d.stats)
 
 		if len(sortedHosts) > 0 {
 			optimalHostId := sortedHosts[0].Key
