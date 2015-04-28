@@ -139,7 +139,7 @@ func (s *DisqueSuite) TestPickClientWithTwoHostStatsUnreachableOptimalHost() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.nodes["host1"] = "example.com:7711"
-	d.nodes["host2"] = "127.0.0.1:7712"
+	d.nodes["host2"] = "127.0.0.1:7722"
 	d.stats["host1"] = 500
 	d.stats["host2"] = 600
 	d.prefix = "host1"
@@ -217,7 +217,7 @@ func (s *DisqueSuite) TestPushToUnreachableNode() {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 	d.Close()
-	d.servers = []string{"127.0.0.1:7712"}
+	d.servers = []string{"127.0.0.1:7722"}
 
 	err := d.Push("queue1", "asdf", 100)
 
@@ -350,6 +350,6 @@ func BenchmarkFetch(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		d.Fetch("queueBenchFetch", 1, 1)
+		d.Fetch("queueBenchFetch", 1, 100)
 	}
 }
