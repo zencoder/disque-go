@@ -7,25 +7,21 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type URLHandlerSuite struct {
+type DisqueSuite struct {
 	suite.Suite
 }
 
-func TestURLHandlerSuite(t *testing.T) {
-	suite.Run(t, new(URLHandlerSuite))
+func TestDisqueSuite(t *testing.T) {
+	suite.Run(t, new(DisqueSuite))
 }
 
-func (s *URLHandlerSuite) SetupTest() {
+func (s *DisqueSuite) SetupTest() {
 }
 
-func (s *URLHandlerSuite) setupEnvVars() {
+func (s *DisqueSuite) SetupSuite() {
 }
 
-func (s *URLHandlerSuite) SetupSuite() {
-	s.setupEnvVars()
-}
-
-func (s *URLHandlerSuite) TestInitWithOneNode() {
+func (s *DisqueSuite) TestInitWithOneNode() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	assert.NotNil(s.T(), d)
@@ -34,8 +30,26 @@ func (s *URLHandlerSuite) TestInitWithOneNode() {
 	assert.EqualValues(s.T(), 1, len(d.nodes))
 }
 
-func (s *URLHandlerSuite) TestInitWithZeroNodes() {
+func (s *DisqueSuite) TestInitWithMultipleHostsOneNode() {
+	hosts := []string{"127.0.0.1:7711", "127.0.0.1:8800"}
+	d := NewDisque(hosts, 1000)
+	assert.NotNil(s.T(), d)
+
+	d.Initialize()
+	assert.EqualValues(s.T(), 1, len(d.nodes))
+}
+
+func (s *DisqueSuite) TestInitWithZeroNodes() {
 	hosts := []string{"127.0.0.1:8800"}
+	d := NewDisque(hosts, 1000)
+	assert.NotNil(s.T(), d)
+
+	assert.NotNil(s.T(), d.Initialize())
+	assert.EqualValues(s.T(), 0, len(d.nodes))
+}
+
+func (s *DisqueSuite) TestInitWithZeroHosts() {
+	hosts := []string{}
 	d := NewDisque(hosts, 1000)
 	assert.NotNil(s.T(), d)
 

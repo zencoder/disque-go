@@ -37,11 +37,10 @@ func (d *Disque) Initialize() (err error) {
 	return d.explore()
 }
 
-func (d *Disque) explore() error {
+func (d *Disque) explore() (err error) {
 	// clear nodes
 	d.nodes = map[string]string{}
 
-	var err error
 	for _, host := range d.servers {
 		log.Printf("Evaluating host: %s", host)
 		hostURL := host
@@ -72,6 +71,7 @@ func (d *Disque) explore() error {
 						d.nodes[prefix] = clusterHost
 					}
 				}
+				return err
 			} else {
 				log.Printf("Error returned when querying for cluster nodes on host: %s, exception: %s", host, err)
 			}
