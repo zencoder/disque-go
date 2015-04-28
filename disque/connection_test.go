@@ -185,3 +185,17 @@ func (s *DisqueSuite) TestPushToUnreachableNode() {
 
 	assert.NotNil(s.T(), err)
 }
+
+func (s *DisqueSuite) TestFetch() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	err := d.Push("queue2", "asdf", 100)
+	assert.Nil(s.T(), err)
+
+	jobs, err := d.Fetch("queue2", 1, 0)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 1, len(jobs))
+	assert.Equal(s.T(), "queue2", jobs[0].QueueName)
+	assert.Equal(s.T(), "asdf", jobs[0].Message)
+}

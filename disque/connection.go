@@ -22,10 +22,11 @@ type Disque struct {
 	host   string
 }
 
-const (
-	NEWLINE     = "\n"
-	MYSELF_FLAG = "myself"
-)
+type Job struct {
+	QueueName string
+	MessageId string
+	Message   string
+}
 
 // Instantiate a new Disque connection
 func NewDisque(servers []string, cycle int32) *Disque {
@@ -56,6 +57,22 @@ func (d *Disque) Push(queueName string, job string, timeout int64) (err error) {
 		}
 	}
 	return
+}
+
+// Fetch job from a Disque queue
+func (d *Disque) Fetch(queueName string, count int32, timeout int64) (jobs []*Job, err error) {
+	jobs = make([]*Job, 0)
+	if err = d.pickClient(); err == nil {
+		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", timeout, "COUNT", count, "FROM", queueName)); err == nil {
+			log.Printf("Raw job info: %s", values)
+			for _, job := range values {
+				if jobValues, err := redis.Strings(job, err); err == nil {
+					jobs = append(jobs, &Job{QueueName: jobValues[0], MessageId: jobValues[1], Message: jobValues[2]})
+				}
+			}
+		}
+	}
+	return jobs, err
 }
 
 func (d *Disque) pickClient() (err error) {
@@ -90,14 +107,13 @@ func (d *Disque) explore() (err error) {
 
 	for _, host := range d.servers {
 		log.Printf("Evaluating host: %s", host)
-		hostURL := host
 
-		if d.scout, err = redis.Dial("tcp", hostURL); err == nil {
+		if d.scout, err = redis.Dial("tcp", host); err == nil {
 			log.Println("Connected to host, finding nodes")
 			defer d.scout.Close()
 
 			if lines, err := redis.String(d.scout.Do("CLUSTER", "NODES")); err == nil {
-				for _, line := range strings.Split(lines, NEWLINE) {
+				for _, line := range strings.Split(lines, "\n") {
 					if strings.TrimSpace(line) != "" {
 						log.Printf("Identifying fields for cluster line: %s", line)
 						fields := strings.Fields(line)
@@ -107,9 +123,9 @@ func (d *Disque) explore() (err error) {
 						flag := fields[2]
 						prefix := id[0:8]
 
-						if flag == MYSELF_FLAG {
+						if flag == "myself" {
 							// configure main client
-							if d.client, err = redis.Dial("tcp", hostURL); err == nil {
+							if d.client, err = redis.Dial("tcp", host); err == nil {
 								// keep track of selected node
 								d.prefix = prefix
 							}
