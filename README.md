@@ -13,5 +13,49 @@ The [Redigo](https://github.com/garyburd/redigo) Redis client is the only depend
 go get github.com/zencoder/disque-go
 ```
 
+###Usage
+Begin by instantiating and initializing a Disque client:
+```go
+hosts := []string{"127.0.0.1:7711"}
+d := NewDisque(hosts, 1000)
+err := d.Initialize()
+```
+This will yield a Disque client instance `d` that is configured to use the Disque server at 127.0.0.1:7711 and its cluster members, if any.
+
+Next, you can push a job to a Disque queue by invoking the `Push` or `PushWithOptions` methods.
+```go
+// Push with default settings
+queueName := "queue_name"
+jobDetails := "job"
+timeoutMs := 100
+err = d.Push(queueName, jobDetails, timeoutMs)
+
+// Push with custom options
+options = make(map[string]string)
+options["TTL"] = "60"            // 60 second TTL on the job message
+options["ASYNC"] = "true"        // push the message asynchronously
+err = d.PushWithOptions(queueName, jobDetails, timeoutMs, options)
+```
+
+Find the length of a queue using the `QueueLength` function:
+```go
+var queueLength int
+queueLength, err = d.QueueLength(queueName)
+```
+
+Fetch jobs using the `Fetch` function:
+```go
+count := 5
+var jobs []*Job
+jobs, err = d.Fetch(queueName, count, timeoutMs)   // retrieve up to 5 Jobs, taking no longer than timeoutMs (100ms)
+```
+
+Lastly, close the Disque client connection when finished:
+```go
+err = d.Close()
+```
+
+That's it (for now)!
+
 ###License
 `disque-go` is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
