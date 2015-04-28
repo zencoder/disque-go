@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/skidder/disque-go",
+	"ImportPath": "github.com/zencoder/disque-go",
 	"GoVersion": "go1.4.1",
 	"Packages": [
 		"./..."

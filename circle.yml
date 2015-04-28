@@ -3,9 +3,9 @@ machine:
     - docker
 checkout:
   post:
-    - rm -rf ~/.go_workspace/src/github.com/skidder
-    - mkdir -p ~/.go_workspace/src/github.com/skidder
-    - cp -R ~/disque-go ~/.go_workspace/src/github.com/skidder/disque-go
+    - rm -rf ~/.go_workspace/src/github.com/zencoder
+    - mkdir -p ~/.go_workspace/src/github.com/zencoder
+    - cp -R ~/disque-go ~/.go_workspace/src/github.com/zencoder/disque-go
 dependencies:
   override:
     - go get github.com/tools/godep
@@ -14,6 +14,6 @@ dependencies:
     - docker run -d -p 7711:7711 quay.io/skidder/disque:latest
 test:
   override:
-    - cd ~/.go_workspace/src/github.com/skidder/disque-go && make test
+    - cd ~/.go_workspace/src/github.com/zencoder/disque-go && make test
   post:
-    - cd ~/.go_workspace/src/github.com/skidder/disque-go && make cover
+    - cd ~/.go_workspace/src/github.com/zencoder/disque-go && make cover
