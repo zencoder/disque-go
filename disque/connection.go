@@ -10,26 +10,31 @@ import (
 
 type Disque struct {
 	servers []string
-	nodes   map[string]string
-	prefix  string
-	client  redis.Conn
-	scout   redis.Conn
+	cycle   int32
+
+	nodes  map[string]string
+	prefix string
+	client redis.Conn
+	scout  redis.Conn
 }
 
-var (
-	NEWLINE = "\n"
+const (
+	NEWLINE     = "\n"
+	MYSELF_FLAG = "myself"
 )
 
-func NewDisque(servers []string) *Disque {
+// Instantiate a new Disque connection
+func NewDisque(servers []string, cycle int32) *Disque {
 	return &Disque{
 		servers: servers,
+		cycle:   cycle,
 	}
 }
 
-// Identify Disque nodes in the cluster
+// Initialize the connection, including the exploration of nodes
+// participating in the cluster.
 func (d *Disque) Initialize() (err error) {
-	err = d.explore()
-	return err
+	return d.explore()
 }
 
 func (d *Disque) explore() error {
@@ -56,7 +61,7 @@ func (d *Disque) explore() error {
 						flag := fields[2]
 						prefix := id[0:8]
 
-						if flag == "myself" {
+						if flag == MYSELF_FLAG {
 							// configure main client
 							if d.client, err = redis.Dial("tcp", hostURL); err == nil {
 								// keep track of selected node

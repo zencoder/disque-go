@@ -27,7 +27,7 @@ func (s *URLHandlerSuite) SetupSuite() {
 
 func (s *URLHandlerSuite) TestInitWithOneNode() {
 	hosts := []string{"127.0.0.1:7711"}
-	d := NewDisque(hosts)
+	d := NewDisque(hosts, 1000)
 	assert.NotNil(s.T(), d)
 
 	d.Initialize()
@@ -36,7 +36,7 @@ func (s *URLHandlerSuite) TestInitWithOneNode() {
 
 func (s *URLHandlerSuite) TestInitWithZeroNodes() {
 	hosts := []string{"127.0.0.1:8800"}
-	d := NewDisque(hosts)
+	d := NewDisque(hosts, 1000)
 	assert.NotNil(s.T(), d)
 
 	assert.NotNil(s.T(), d.Initialize())
