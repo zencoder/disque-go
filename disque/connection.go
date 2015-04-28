@@ -77,6 +77,10 @@ func (d *Disque) Fetch(queueName string, count int32, timeout int64) (jobs []*Jo
 			for _, job := range values {
 				if jobValues, err := redis.Strings(job, err); err == nil {
 					jobs = append(jobs, &Job{QueueName: jobValues[0], MessageId: jobValues[1], Message: jobValues[2]})
+
+					// update stats using fragment of the message-id
+					statsKey := jobValues[1][2:10]
+					d.stats[statsKey] = d.stats[statsKey] + 1
 				}
 			}
 		}
