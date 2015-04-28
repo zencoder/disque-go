@@ -43,13 +43,15 @@ func (d *Disque) Initialize() (err error) {
 	return d.explore()
 }
 
+// Close the main connection maintained by this Disque instance
 func (d *Disque) Close() error {
 	return d.client.Close()
 }
 
+// Push job onto a Disque queue
 func (d *Disque) Push(queueName string, job string, timeout int64) (err error) {
 	if _, err = d.client.Do("ADDJOB", queueName, job, timeout); err != nil {
-		if err = d.explore(); err != nil {
+		if err = d.explore(); err == nil {
 			_, err = d.client.Do("ADDJOB", queueName, job, timeout)
 		}
 	}

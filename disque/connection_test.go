@@ -162,3 +162,26 @@ func (s *DisqueSuite) TestPush() {
 
 	assert.Nil(s.T(), err)
 }
+
+func (s *DisqueSuite) TestPushToClosedConnection() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	d.Close()
+
+	err := d.Push("queue1", "asdf", 100)
+
+	assert.Nil(s.T(), err)
+}
+
+func (s *DisqueSuite) TestPushToUnreachableNode() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	d.Close()
+	d.servers = []string{"127.0.0.1:7712"}
+
+	err := d.Push("queue1", "asdf", 100)
+
+	assert.NotNil(s.T(), err)
+}
