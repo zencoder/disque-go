@@ -50,6 +50,11 @@ var jobs []*Job
 jobs, err = d.Fetch(queueName, count, timeoutMs)   // retrieve up to 5 Jobs, taking no longer than timeoutMs (100ms)
 ```
 
+Acknowledge receipt and processing of a message by invoking the `Ack` function:
+```go
+err = d.Ack(job.MessageId)
+```
+
 Lastly, close the Disque client connection when finished:
 ```go
 err = d.Close()
