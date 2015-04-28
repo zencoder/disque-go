@@ -153,6 +153,44 @@ func (s *DisqueSuite) TestPickClientWithTwoHostStatsUnreachableOptimalHost() {
 	assert.Equal(s.T(), 2, len(d.stats))
 }
 
+func (s *DisqueSuite) TestPushWithEmptyOptions() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	options := make(map[string]string)
+
+	err := d.PushWithOptions("queue1", "asdf", 100, options)
+
+	assert.Nil(s.T(), err)
+}
+
+func (s *DisqueSuite) TestPushWithOptions() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	options := make(map[string]string)
+	options["TTL"] = "60"
+	options["ASYNC"] = "true"
+
+	err := d.PushWithOptions("queue1", "asdf", 100, options)
+
+	assert.Nil(s.T(), err)
+}
+
+func (s *DisqueSuite) TestPushWithOptionsOnClosedConnection() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	d.Close()
+	options := make(map[string]string)
+	options["TTL"] = "60"
+	options["ASYNC"] = "true"
+
+	err := d.PushWithOptions("queue1", "asdf", 100, options)
+
+	assert.Nil(s.T(), err)
+}
+
 func (s *DisqueSuite) TestPush() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
@@ -184,6 +222,43 @@ func (s *DisqueSuite) TestPushToUnreachableNode() {
 	err := d.Push("queue1", "asdf", 100)
 
 	assert.NotNil(s.T(), err)
+}
+
+func (s *DisqueSuite) TestQueueLength() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	err := d.Push("queue3", "asdf", 100)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
+
+	var queueLength int
+	queueLength, err = d.QueueLength("queue3")
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 1, queueLength)
+
+	var jobs []*Job
+	jobs, err = d.Fetch("queue3", 1, 1)
+	err = d.Ack(jobs[0].MessageId)
+}
+
+func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	err := d.Push("queue3", "asdf", 100)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
+	d.Close()
+
+	var queueLength int
+	queueLength, err = d.QueueLength("queue3")
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 1, queueLength)
+
+	var jobs []*Job
+	jobs, err = d.Fetch("queue3", 1, 1)
+	err = d.Ack(jobs[0].MessageId)
 }
 
 func (s *DisqueSuite) TestFetch() {
@@ -250,6 +325,18 @@ func BenchmarkPush(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		d.Push("queueBenchPush", "asdf", 100)
+	}
+}
+
+func BenchmarkPushAsync(b *testing.B) {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	options := make(map[string]string)
+	options["ASYNC"] = "true"
+
+	for i := 0; i < b.N; i++ {
+		d.PushWithOptions("queueBenchPushAsync", "asdf", 100, options)
 	}
 }
 
