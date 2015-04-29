@@ -165,6 +165,11 @@ func (d *Disque) pickClient() (err error) {
 			if optimalHostId != d.prefix {
 				// a different optimal host has been discovered
 				if val, ok := d.nodes[optimalHostId]; ok {
+					// close old main client connection if it exists
+					if d.client != nil {
+						d.client.Close()
+					}
+
 					// configure main client
 					if d.client, err = redis.Dial("tcp", d.nodes[optimalHostId]); err == nil {
 						// keep track of selected node
@@ -201,6 +206,11 @@ func (d *Disque) explore() (err error) {
 						prefix := id[0:8]
 
 						if flag == "myself" {
+							// close main client if it exists
+							if d.client != nil {
+								d.client.Close()
+							}
+
 							// configure main client
 							if d.client, err = redis.Dial("tcp", host); err == nil {
 								// keep track of selected node
