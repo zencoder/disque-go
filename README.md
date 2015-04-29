@@ -50,9 +50,8 @@ var queueLength int
 queueLength, err = d.QueueLength(queueName)
 ```
 
-Fetch jobs using the `Fetch` function:
+Fetch a single job using the `Fetch` function:
 ```go
-count := 5
 var job *Job
 job, err = d.Fetch(queueName, timeout)   // retrieve a single job, taking no longer than timeout (1 second) to return
 ```
