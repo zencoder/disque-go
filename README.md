@@ -10,7 +10,7 @@ The [Redigo](https://github.com/garyburd/redigo) Redis client is the only depend
 
 ###Installation
 ```shell
-go get github.com/zencoder/disque-go
+go get github.com/zencoder/disque-go/disque
 ```
 
 ###Usage
