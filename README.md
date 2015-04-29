@@ -50,11 +50,17 @@ var queueLength int
 queueLength, err = d.QueueLength(queueName)
 ```
 
-Fetch jobs using the `Fetch` function:
+Fetch a single job using the `Fetch` function:
+```go
+var job *Job
+job, err = d.Fetch(queueName, timeout)   // retrieve a single job, taking no longer than timeout (1 second) to return
+```
+
+Fetch multiple jobs using the `FetchMultiple` function:
 ```go
 count := 5
 var jobs []*Job
-jobs, err = d.Fetch(queueName, count, timeout)   // retrieve up to 5 Jobs, taking no longer than timeout (1 second) to return
+jobs, err = d.FetchMultiple(queueName, count, timeout)   // retrieve up to 5 Jobs, taking no longer than timeout (1 second) to return
 ```
 
 Acknowledge receipt and processing of a message by invoking the `Ack` function:
