@@ -238,9 +238,9 @@ func (s *DisqueSuite) TestQueueLength() {
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1, queueLength)
 
-	var jobs []*Job
-	jobs, err = d.Fetch("queue3", 1, 1*time.Second)
-	err = d.Ack(jobs[0].MessageId)
+	var job *Job
+	job, err = d.Fetch("queue3", 1*time.Second)
+	err = d.Ack(job.MessageId)
 }
 
 func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
@@ -257,9 +257,9 @@ func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1, queueLength)
 
-	var jobs []*Job
-	jobs, err = d.Fetch("queue3", 1, 1*time.Second)
-	err = d.Ack(jobs[0].MessageId)
+	var job *Job
+	job, err = d.Fetch("queue3", 1*time.Second)
+	err = d.Ack(job.MessageId)
 }
 
 func (s *DisqueSuite) TestFetch() {
@@ -270,12 +270,12 @@ func (s *DisqueSuite) TestFetch() {
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, d.stats[d.prefix])
 
-	jobs, err := d.Fetch("queue4", 1, 1*time.Second)
+	job, err := d.Fetch("queue4", 1*time.Second)
 	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 1, len(jobs))
-	assert.Equal(s.T(), "queue4", jobs[0].QueueName)
-	assert.Equal(s.T(), "asdf", jobs[0].Message)
-	assert.Equal(s.T(), jobs[0].MessageId[2:10], d.prefix)
+	assert.NotNil(s.T(), job)
+	assert.Equal(s.T(), "queue4", job.QueueName)
+	assert.Equal(s.T(), "asdf", job.Message)
+	assert.Equal(s.T(), job.MessageId[2:10], d.prefix)
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
 }
 
@@ -287,11 +287,11 @@ func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 	err = d.Push("queue5", "msg2", 1*time.Second)
 	err = d.Push("queue5", "msg3", 1*time.Second)
 
-	jobs, err := d.Fetch("queue5", 2, 1*time.Second)
+	jobs, err := d.FetchMultiple("queue5", 2, 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 2, len(jobs))
 
-	jobs, err = d.Fetch("queue5", 2, 1*time.Second)
+	jobs, err = d.FetchMultiple("queue5", 2, 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1, len(jobs))
 }
@@ -303,10 +303,10 @@ func (s *DisqueSuite) TestAck() {
 	err := d.Push("queue2", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 
-	jobs, err := d.Fetch("queue2", 1, 1*time.Second)
+	job, err := d.Fetch("queue2", 1*time.Second)
 	assert.Nil(s.T(), err)
 
-	err = d.Ack(jobs[0].MessageId)
+	err = d.Ack(job.MessageId)
 	assert.Nil(s.T(), err)
 }
 
@@ -351,6 +351,6 @@ func BenchmarkFetch(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		d.Fetch("queueBenchFetch", 1, 1*time.Second)
+		d.Fetch("queueBenchFetch", 1*time.Second)
 	}
 }

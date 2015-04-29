@@ -113,8 +113,19 @@ func (d *Disque) QueueLength(queueName string) (queueLength int, err error) {
 	return
 }
 
+// Fetch a single job from a Disque queue.
+func (d *Disque) Fetch(queueName string, timeout time.Duration) (job *Job, err error) {
+	var jobs []*Job
+	if jobs, err = d.FetchMultiple(queueName, 1, timeout); err == nil {
+		if len(jobs) > 0 {
+			job = jobs[0]
+		}
+	}
+	return
+}
+
 // Fetch jobs from a Disque queue.
-func (d *Disque) Fetch(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
+func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
 	jobs = make([]*Job, 0)
 	if err = d.pickClient(); err == nil {
 		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", int64(timeout.Seconds()*1000), "COUNT", count, "FROM", queueName)); err == nil {
