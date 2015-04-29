@@ -279,6 +279,20 @@ func (s *DisqueSuite) TestFetch() {
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
 }
 
+func (s *DisqueSuite) TestFetchWithNoJobs() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	err := d.Push("queue4", "asdf", 1*time.Second)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
+
+	job, err := d.Fetch("emptyqueue", 1*time.Second)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), job)
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
+}
+
 func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
@@ -294,6 +308,21 @@ func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 	jobs, err = d.FetchMultiple("queue5", 2, 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1, len(jobs))
+}
+
+func (s *DisqueSuite) TestFetchMultipleWithNoJobs() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	err := d.Push("queue4", "asdf", 1*time.Second)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
+
+	jobs, err := d.FetchMultiple("emptyqueue", 1, 1*time.Second)
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), jobs)
+	assert.Equal(s.T(), 0, len(jobs))
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
 }
 
 func (s *DisqueSuite) TestAck() {
