@@ -92,6 +92,7 @@ func (s *DisqueSuite) TestPickClientWithEmptyStats() {
 func (s *DisqueSuite) TestPickClientWithTwoHostStatsDifferentOptimalHost() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
+	d.Initialize()
 	d.nodes["host1"] = "example.com:7711"
 	d.nodes["host2"] = "127.0.0.1:7711"
 	d.stats["host1"] = 500

@@ -51,11 +51,11 @@ func (d *Disque) Close() error {
 
 // Push job onto a Disque queue with the default set of options
 func (d *Disque) Push(queueName string, job string, timeout time.Duration) (err error) {
-	if _, err = d.client.Do("ADDJOB", queueName, job, int64(timeout.Seconds()*1000)); err != nil {
-		if err = d.explore(); err == nil {
-			_, err = d.client.Do("ADDJOB", queueName, job, int64(timeout.Seconds()*1000))
-		}
-	}
+	args := redis.Args{}.
+		Add(queueName).
+		Add(job).
+		Add(int64(timeout.Seconds() * 1000))
+	_, err = d.call("ADDJOB", args)
 	return
 }
 
@@ -83,34 +83,20 @@ func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Dura
 			Add(job).
 			Add(int64(timeout.Seconds() * 1000)).
 			AddFlat(optionsToArguments(options))
-
-		if _, err = d.client.Do("ADDJOB", args...); err != nil {
-			if err = d.explore(); err == nil {
-				_, err = d.client.Do("ADDJOB", args...)
-			}
-		}
+		_, err = d.call("ADDJOB", args)
 	}
 	return
 }
 
 // Acknowledge receipt and processing of a message
 func (d *Disque) Ack(messageId string) (err error) {
-	if _, err = d.client.Do("ACKJOB", messageId); err != nil {
-		if err = d.explore(); err == nil {
-			_, err = d.client.Do("ACKJOB", messageId)
-		}
-	}
+	_, err = d.call("ACKJOB", redis.Args{}.Add(messageId))
 	return
 }
 
 // Retrieve length of queue
 func (d *Disque) QueueLength(queueName string) (queueLength int, err error) {
-	if queueLength, err = redis.Int(d.client.Do("QLEN", queueName)); err != nil {
-		if err = d.explore(); err == nil {
-			queueLength, err = redis.Int(d.client.Do("QLEN", queueName))
-		}
-	}
-	return
+	return redis.Int(d.call("QLEN", redis.Args{}.Add(queueName)))
 }
 
 // Fetch a single job from a Disque queue.
@@ -141,6 +127,15 @@ func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duratio
 		}
 	}
 	return jobs, err
+}
+
+func (d *Disque) call(command string, args redis.Args) (reply interface{}, err error) {
+	if reply, err = d.client.Do(command, args...); err != nil {
+		if err = d.explore(); err == nil {
+			reply, err = d.client.Do(command, args...)
+		}
+	}
+	return
 }
 
 func optionsToArguments(options map[string]string) (arguments []string) {
