@@ -34,14 +34,14 @@ Next, you can push a job to a Disque queue by invoking the `Push` or `PushWithOp
 // Push with default settings
 queueName := "queue_name"
 jobDetails := "job"
-timeoutMs := 100
-err = d.Push(queueName, jobDetails, timeoutMs)
+timeout := 1*time.Second          // take no long than 1 second to enqueue the message
+err = d.Push(queueName, jobDetails, timeout)
 
 // Push with custom options
 options = make(map[string]string)
 options["TTL"] = "60"            // 60 second TTL on the job message
 options["ASYNC"] = "true"        // push the message asynchronously
-err = d.PushWithOptions(queueName, jobDetails, timeoutMs, options)
+err = d.PushWithOptions(queueName, jobDetails, timeout, options)
 ```
 
 Find the length of a queue using the `QueueLength` function:
@@ -54,7 +54,7 @@ Fetch jobs using the `Fetch` function:
 ```go
 count := 5
 var jobs []*Job
-jobs, err = d.Fetch(queueName, count, timeoutMs)   // retrieve up to 5 Jobs, taking no longer than timeoutMs (100ms)
+jobs, err = d.Fetch(queueName, count, timeout)   // retrieve up to 5 Jobs, taking no longer than timeout (1 second) to return
 ```
 
 Acknowledge receipt and processing of a message by invoking the `Ack` function:

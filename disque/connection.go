@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -49,10 +50,10 @@ func (d *Disque) Close() error {
 }
 
 // Push job onto a Disque queue with the default set of options
-func (d *Disque) Push(queueName string, job string, timeout int64) (err error) {
-	if _, err = d.client.Do("ADDJOB", queueName, job, timeout); err != nil {
+func (d *Disque) Push(queueName string, job string, timeout time.Duration) (err error) {
+	if _, err = d.client.Do("ADDJOB", queueName, job, int64(timeout.Seconds()*1000)); err != nil {
 		if err = d.explore(); err == nil {
-			_, err = d.client.Do("ADDJOB", queueName, job, timeout)
+			_, err = d.client.Do("ADDJOB", queueName, job, int64(timeout.Seconds()*1000))
 		}
 	}
 	return
@@ -72,12 +73,17 @@ func (d *Disque) Push(queueName string, job string, timeout int64) (err error) {
 //     options := make(map[string]string)
 //     options["DELAY"] = 30
 //     options["ASYNC"] = true
-//     d.PushWithOptions("queue_name", "job", 0, options)
-func (d *Disque) PushWithOptions(queueName string, job string, timeout int64, options map[string]string) (err error) {
+//     d.PushWithOptions("queue_name", "job", 1*time.Second, options)
+func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Duration, options map[string]string) (err error) {
 	if len(options) == 0 {
 		err = d.Push(queueName, job, timeout)
 	} else {
-		args := redis.Args{}.Add(queueName).Add(job).Add(timeout).AddFlat(optionsToArguments(options))
+		args := redis.Args{}.
+			Add(queueName).
+			Add(job).
+			Add(int64(timeout.Seconds() * 1000)).
+			AddFlat(optionsToArguments(options))
+
 		if _, err = d.client.Do("ADDJOB", args...); err != nil {
 			if err = d.explore(); err == nil {
 				_, err = d.client.Do("ADDJOB", args...)
@@ -108,10 +114,10 @@ func (d *Disque) QueueLength(queueName string) (queueLength int, err error) {
 }
 
 // Fetch jobs from a Disque queue.
-func (d *Disque) Fetch(queueName string, count int, timeout int64) (jobs []*Job, err error) {
+func (d *Disque) Fetch(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
 	jobs = make([]*Job, 0)
 	if err = d.pickClient(); err == nil {
-		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", timeout, "COUNT", count, "FROM", queueName)); err == nil {
+		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", int64(timeout.Seconds()*1000), "COUNT", count, "FROM", queueName)); err == nil {
 			for _, job := range values {
 				if jobValues, err := redis.Strings(job, err); err == nil {
 					jobs = append(jobs, &Job{QueueName: jobValues[0], MessageId: jobValues[1], Message: jobValues[2]})
