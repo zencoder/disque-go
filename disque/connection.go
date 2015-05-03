@@ -45,8 +45,8 @@ func (d *Disque) Initialize() (err error) {
 }
 
 // Close the main connection maintained by this Disque instance
-func (d *Disque) Close() error {
-	return d.client.Close()
+func (d *Disque) Close() {
+	d.client.Close()
 }
 
 // Push job onto a Disque queue with the default set of options

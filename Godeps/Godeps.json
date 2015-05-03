@@ -14,6 +14,10 @@
 			"Rev": "535138d7bcd717d6531c701ef5933d98b1866257"
 		},
 		{
+			"ImportPath": "github.com/golang/glog",
+			"Rev": "44145f04b68cf362d9c4df2182967c2275eaefed"
+		},
+		{
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
 		},
@@ -24,6 +28,26 @@
 		{
 			"ImportPath": "github.com/stretchr/testify/suite",
 			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
+		},
+		{
+			"ImportPath": "github.com/youtube/vitess/go/acl",
+			"Rev": "71ea23e7fd3619357903194ba3f25e860ed52751"
+		},
+		{
+			"ImportPath": "github.com/youtube/vitess/go/cache",
+			"Rev": "71ea23e7fd3619357903194ba3f25e860ed52751"
+		},
+		{
+			"ImportPath": "github.com/youtube/vitess/go/pools",
+			"Rev": "71ea23e7fd3619357903194ba3f25e860ed52751"
+		},
+		{
+			"ImportPath": "github.com/youtube/vitess/go/sync2",
+			"Rev": "71ea23e7fd3619357903194ba3f25e860ed52751"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "a8c61998a557a37435f719980da368469c10bfed"
 		}
 	]
 }

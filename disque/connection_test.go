@@ -27,8 +27,6 @@ func (s *DisqueSuite) TestInitAndCloseWithOneNode() {
 	d := NewDisque(hosts, 1000)
 
 	d.Initialize()
-
-	assert.Nil(s.T(), d.Close())
 }
 
 func (s *DisqueSuite) TestInitWithOneNode() {
