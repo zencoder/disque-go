@@ -79,6 +79,11 @@ func (d *DisquePool) Close() {
 	d.pool.Close()
 }
 
+// IsClosed returns true if the resource pool is closed.
+func (d *DisquePool) IsClosed() (closed bool) {
+	return d.pool.IsClosed()
+}
+
 func (d *DisquePool) poolFactory() (r pools.Resource, err error) {
 	conn := NewDisque(d.servers, d.cycle)
 	err = conn.Initialize()

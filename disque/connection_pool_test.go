@@ -65,4 +65,5 @@ func (s *DisquePoolSuite) TestWithResizedPool() {
 	d.Put(c2)
 
 	d.Close()
+	assert.True(s.T(), d.IsClosed())
 }
