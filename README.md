@@ -29,6 +29,30 @@ err := d.Initialize()
 ```
 This will yield a Disque client instance `d` that is configured to use the Disque server at 127.0.0.1:7711 and its cluster members, if any.
 
+The `disque-go` library also includes support for connection pooling.  Instantiate the pool as follows:
+```go
+import (
+  "github.com/zencoder/disque-go/disque"
+)
+
+...
+
+hosts := []string{"127.0.0.1:7711"} // array of 1 or more Disque servers
+cycle := 1000                       // check connection stats every 1000 Fetch's
+capacity := 5                       // initial capacity of the pool
+maxCapacity := 10                   // max capacity that the pool can be resized to
+idleTimeout := 15 * time.Minute     // timeout for idle connections
+d := NewDisquePool(hosts, cycle, capacity, maxCapacity, idleTimeout)
+
+c, err := d.Get()   // get a connection from the pool
+
+... (use the connection to interact with Disque)...
+
+d.Put(c)            // return a connection to the pool
+d.Close()           // close the pool, waits for all connection to be returned
+```
+
+
 Next, you can push a job to a Disque queue by invoking the `Push` or `PushWithOptions` methods.
 ```go
 // Push with default settings
