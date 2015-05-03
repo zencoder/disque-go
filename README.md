@@ -14,22 +14,8 @@ go get github.com/zencoder/disque-go/disque
 ```
 
 ###Usage
-Begin by instantiating and initializing a Disque client:
-```go
-import (
-  "github.com/zencoder/disque-go/disque"
-)
-
-...
-
-hosts := []string{"127.0.0.1:7711"} // array of 1 or more Disque servers
-cycle := 1000                       // check connection stats every 1000 Fetch's
-d := disque.NewDisque(hosts, cycle)
-err := d.Initialize()
-```
-This will yield a Disque client instance `d` that is configured to use the Disque server at 127.0.0.1:7711 and its cluster members, if any.
-
-The `disque-go` library also includes support for connection pooling.  Instantiate the pool as follows:
+#### Connection Pool
+Instantiate the pool as follows:
 ```go
 import (
   "github.com/zencoder/disque-go/disque"
@@ -42,18 +28,52 @@ cycle := 1000                       // check connection stats every 1000 Fetch's
 capacity := 5                       // initial capacity of the pool
 maxCapacity := 10                   // max capacity that the pool can be resized to
 idleTimeout := 15 * time.Minute     // timeout for idle connections
-d := NewDisquePool(hosts, cycle, capacity, maxCapacity, idleTimeout)
+var p *disque.DisquePool
+p = disque.NewDisquePool(hosts, cycle, capacity, maxCapacity, idleTimeout)
+```
 
-c, err := d.Get()   // get a connection from the pool
+Next, get a handle to a connection from the pool as follows:
+```go
+var d *disque.Disque
+var err error
+d, err = p.Get()   // get a connection from the pool
 
 ... (use the connection to interact with Disque)...
 
-d.Put(c)            // return a connection to the pool
-d.Close()           // close the pool, waits for all connection to be returned
+p.Put(d)            // return a connection to the pool
 ```
 
+To shutdown the connection pool, such as when the application is existing, invoke the `Close` function:
+```go
+p.Close()           // close the pool, waits for all connections to be returned
+```
 
-Next, you can push a job to a Disque queue by invoking the `Push` or `PushWithOptions` methods.
+####Single Connection
+Begin by instantiating and initializing a Disque client connection:
+```go
+import (
+  "github.com/zencoder/disque-go/disque"
+)
+
+...
+
+hosts := []string{"127.0.0.1:7711"} // array of 1 or more Disque servers
+cycle := 1000                       // check connection stats every 1000 Fetch's
+var d *disque.Disque
+var err error
+d = disque.NewDisque(hosts, cycle)
+err = d.Initialize()
+```
+This will yield a Disque client instance `d` that is configured to use the Disque server at 127.0.0.1:7711 and its cluster members, if any.
+
+
+Close the Disque client connection when finished:
+```go
+err = d.Close()
+```
+
+####Disque Operations
+You can push a job to a Disque queue by invoking the `Push` or `PushWithOptions` methods.
 ```go
 // Push with default settings
 queueName := "queue_name"
@@ -90,11 +110,6 @@ jobs, err = d.FetchMultiple(queueName, count, timeout)   // retrieve up to 5 Job
 Acknowledge receipt and processing of a message by invoking the `Ack` function:
 ```go
 err = d.Ack(job.MessageId)
-```
-
-Lastly, close the Disque client connection when finished:
-```go
-err = d.Close()
 ```
 
 That's it (for now)!
