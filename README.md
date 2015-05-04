@@ -19,6 +19,7 @@ Instantiate the pool as follows:
 ```go
 import (
   "github.com/zencoder/disque-go/disque"
+  "golang.org/x/net/context"
 )
 
 ...
@@ -32,11 +33,11 @@ var p *disque.DisquePool
 p = disque.NewDisquePool(hosts, cycle, capacity, maxCapacity, idleTimeout)
 ```
 
-Next, get a handle to a connection from the pool as follows:
+Next, get a handle to a connection from the pool, specifying a [context](https://godoc.org/golang.org/x/net/context) that controls how long to wait for a connection to be retrieved:
 ```go
 var d *disque.Disque
 var err error
-d, err = p.Get()   // get a connection from the pool
+d, err = p.Get(context.Background())   // get a connection from the pool
 
 ... (use the connection to interact with Disque)...
 
@@ -78,7 +79,7 @@ You can push a job to a Disque queue by invoking the `Push` or `PushWithOptions`
 // Push with default settings
 queueName := "queue_name"
 jobDetails := "job"
-timeout := 1*time.Second          // take no long than 1 second to enqueue the message
+timeout := time.Second          // take no long than 1 second to enqueue the message
 err = d.Push(queueName, jobDetails, timeout)
 
 // Push with custom options
@@ -96,14 +97,14 @@ queueLength, err = d.QueueLength(queueName)
 
 Fetch a single job using the `Fetch` function:
 ```go
-var job *Job
+var job *disque.Job
 job, err = d.Fetch(queueName, timeout)   // retrieve a single job, taking no longer than timeout (1 second) to return
 ```
 
 Fetch multiple jobs using the `FetchMultiple` function:
 ```go
 count := 5
-var jobs []*Job
+var jobs []*disque.Job
 jobs, err = d.FetchMultiple(queueName, count, timeout)   // retrieve up to 5 Jobs, taking no longer than timeout (1 second) to return
 ```
 

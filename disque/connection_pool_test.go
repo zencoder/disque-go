@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/net/context"
 )
 
 type DisquePoolSuite struct {
@@ -26,7 +27,7 @@ func (s *DisquePoolSuite) TestWithPoolOfOne() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisquePool(hosts, 1000, 1, 1, time.Hour)
 
-	c, err := d.Get()
+	c, err := d.Get(context.Background())
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), c)
 
@@ -35,7 +36,7 @@ func (s *DisquePoolSuite) TestWithPoolOfOne() {
 	d.Close()
 
 	// try getting a connection from the closed pool
-	c, err = d.Get()
+	c, err = d.Get(context.Background())
 	assert.NotNil(s.T(), err)
 }
 
@@ -43,7 +44,7 @@ func (s *DisquePoolSuite) TestWithResizedPool() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisquePool(hosts, 1000, 1, 2, time.Hour)
 
-	c1, err := d.Get()
+	c1, err := d.Get(context.Background())
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), c1)
 

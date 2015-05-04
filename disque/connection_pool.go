@@ -42,11 +42,10 @@ func (d *DisquePool) SetCapacity(capacity int) {
 
 // Get will return the next available resource. If capacity
 // has not been reached, it will create a new one using the factory. Otherwise,
-// it will wait till the next resource becomes available or a timeout.
-// A timeout of 0 is an indefinite wait.
-func (d *DisquePool) Get() (conn *Disque, err error) {
+// it will wait until the supplied context expires.
+func (d *DisquePool) Get(ctx context.Context) (conn *Disque, err error) {
 	var r pools.Resource
-	if r, err = d.pool.Get(context.Background()); err == nil && r != nil {
+	if r, err = d.pool.Get(ctx); err == nil && r != nil {
 		conn = r.(*Disque)
 	}
 	return conn, err
