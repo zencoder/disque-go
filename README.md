@@ -109,9 +109,15 @@ var jobs []*disque.Job
 jobs, err = d.FetchMultiple(queueName, count, timeout)   // retrieve up to 5 Jobs, taking no longer than timeout (1 second) to return
 ```
 
+Retrieve details for an enqueued job before it has been acknowledged:
+```go
+var jobDetails *disque.JobDetails
+jobDetails, err = d.GetJobDetails(jobId)
+```
+
 Acknowledge receipt and processing of a message by invoking the `Ack` function:
 ```go
-err = d.Ack(job.MessageId)
+err = d.Ack(job.JobId)
 ```
 
 That's it (for now)!
