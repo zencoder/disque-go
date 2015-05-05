@@ -80,13 +80,14 @@ You can push a job to a Disque queue by invoking the `Push` or `PushWithOptions`
 queueName := "queue_name"
 jobDetails := "job"
 timeout := time.Second          // take no long than 1 second to enqueue the message
-err = d.Push(queueName, jobDetails, timeout)
+var jobId string
+jobId, err = d.Push(queueName, jobDetails, timeout)
 
 // Push with custom options
 options = make(map[string]string)
 options["TTL"] = "60"            // 60 second TTL on the job message
 options["ASYNC"] = "true"        // push the message asynchronously
-err = d.PushWithOptions(queueName, jobDetails, timeout, options)
+jobId, err = d.PushWithOptions(queueName, jobDetails, timeout, options)
 ```
 
 Find the length of a queue using the `QueueLength` function:
