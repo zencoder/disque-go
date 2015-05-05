@@ -50,12 +50,17 @@ func (d *Disque) Close() {
 }
 
 // Push job onto a Disque queue with the default set of options
-func (d *Disque) Push(queueName string, job string, timeout time.Duration) (err error) {
+func (d *Disque) Push(queueName string, job string, timeout time.Duration) (jobId string, err error) {
 	args := redis.Args{}.
 		Add(queueName).
 		Add(job).
 		Add(int64(timeout.Seconds() * 1000))
-	_, err = d.call("ADDJOB", args)
+	r, err := d.call("ADDJOB", args)
+
+	switch r := r.(type) {
+	case string:
+		jobId = r
+	}
 	return
 }
 
@@ -74,16 +79,21 @@ func (d *Disque) Push(queueName string, job string, timeout time.Duration) (err 
 //     options["DELAY"] = 30
 //     options["ASYNC"] = true
 //     d.PushWithOptions("queue_name", "job", 1*time.Second, options)
-func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Duration, options map[string]string) (err error) {
+func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Duration, options map[string]string) (jobId string, err error) {
+	var r interface{}
 	if len(options) == 0 {
-		err = d.Push(queueName, job, timeout)
+		r, err = d.Push(queueName, job, timeout)
 	} else {
 		args := redis.Args{}.
 			Add(queueName).
 			Add(job).
 			Add(int64(timeout.Seconds() * 1000)).
 			AddFlat(optionsToArguments(options))
-		_, err = d.call("ADDJOB", args)
+		r, err = d.call("ADDJOB", args)
+	}
+	switch r := r.(type) {
+	case string:
+		jobId = r
 	}
 	return
 }

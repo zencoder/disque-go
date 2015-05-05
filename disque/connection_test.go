@@ -159,7 +159,7 @@ func (s *DisqueSuite) TestPushWithEmptyOptions() {
 	d.Initialize()
 	options := make(map[string]string)
 
-	err := d.PushWithOptions("queue1", "asdf", 1*time.Second, options)
+	_, err := d.PushWithOptions("queue1", "asdf", 1*time.Second, options)
 
 	assert.Nil(s.T(), err)
 }
@@ -172,7 +172,7 @@ func (s *DisqueSuite) TestPushWithOptions() {
 	options["TTL"] = "60"
 	options["ASYNC"] = "true"
 
-	err := d.PushWithOptions("queue1", "asdf", 1*time.Second, options)
+	_, err := d.PushWithOptions("queue1", "asdf", 1*time.Second, options)
 
 	assert.Nil(s.T(), err)
 }
@@ -186,7 +186,7 @@ func (s *DisqueSuite) TestPushWithOptionsOnClosedConnection() {
 	options["TTL"] = "60"
 	options["ASYNC"] = "true"
 
-	err := d.PushWithOptions("queue1", "asdf", 1*time.Second, options)
+	_, err := d.PushWithOptions("queue1", "asdf", 1*time.Second, options)
 
 	assert.Nil(s.T(), err)
 }
@@ -196,7 +196,7 @@ func (s *DisqueSuite) TestPush() {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	err := d.Push("queue1", "asdf", 1*time.Second)
+	_, err := d.Push("queue1", "asdf", 1*time.Second)
 
 	assert.Nil(s.T(), err)
 }
@@ -207,7 +207,7 @@ func (s *DisqueSuite) TestPushToClosedConnection() {
 	d.Initialize()
 	d.Close()
 
-	err := d.Push("queue1", "asdf", 1*time.Second)
+	_, err := d.Push("queue1", "asdf", 1*time.Second)
 
 	assert.Nil(s.T(), err)
 }
@@ -219,7 +219,7 @@ func (s *DisqueSuite) TestPushToUnreachableNode() {
 	d.Close()
 	d.servers = []string{"127.0.0.1:7722"}
 
-	err := d.Push("queue1", "asdf", 1*time.Second)
+	_, err := d.Push("queue1", "asdf", 1*time.Second)
 
 	assert.NotNil(s.T(), err)
 }
@@ -228,7 +228,7 @@ func (s *DisqueSuite) TestQueueLength() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue3", "asdf", 1*time.Second)
+	_, err := d.Push("queue3", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, d.stats[d.prefix])
 
@@ -246,7 +246,7 @@ func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue3", "asdf", 1*time.Second)
+	_, err := d.Push("queue3", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, d.stats[d.prefix])
 	d.Close()
@@ -265,7 +265,7 @@ func (s *DisqueSuite) TestFetch() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue4", "asdf", 1*time.Second)
+	_, err := d.Push("queue4", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, d.stats[d.prefix])
 
@@ -282,7 +282,7 @@ func (s *DisqueSuite) TestFetchWithNoJobs() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue4", "asdf", 1*time.Second)
+	_, err := d.Push("queue4", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, d.stats[d.prefix])
 
@@ -296,9 +296,9 @@ func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue5", "msg1", 1*time.Second)
-	err = d.Push("queue5", "msg2", 1*time.Second)
-	err = d.Push("queue5", "msg3", 1*time.Second)
+	_, err := d.Push("queue5", "msg1", 1*time.Second)
+	_, err = d.Push("queue5", "msg2", 1*time.Second)
+	_, err = d.Push("queue5", "msg3", 1*time.Second)
 
 	jobs, err := d.FetchMultiple("queue5", 2, 1*time.Second)
 	assert.Nil(s.T(), err)
@@ -313,7 +313,7 @@ func (s *DisqueSuite) TestFetchMultipleWithNoJobs() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue4", "asdf", 1*time.Second)
+	_, err := d.Push("queue4", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 0, d.stats[d.prefix])
 
@@ -328,7 +328,7 @@ func (s *DisqueSuite) TestAck() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
-	err := d.Push("queue2", "asdf", 1*time.Second)
+	_, err := d.Push("queue2", "asdf", 1*time.Second)
 	assert.Nil(s.T(), err)
 
 	job, err := d.Fetch("queue2", 1*time.Second)
