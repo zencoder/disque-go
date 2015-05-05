@@ -24,8 +24,24 @@ type Disque struct {
 
 type Job struct {
 	QueueName string
-	MessageId string
+	JobId     string
 	Message   string
+}
+
+type JobDetails struct {
+	JobId             string
+	QueueName         string
+	State             string
+	ReplicationFactor int
+	TTL               time.Duration
+	CreatedAt         time.Time
+	Delay             time.Duration
+	Retry             time.Duration
+	NodesDelivered    []string
+	NodesConfirmed    []string
+	NextRequeueWithin time.Duration
+	NextAwakeWithin   time.Duration
+	Message           string
 }
 
 // Instantiate a new Disque connection
@@ -89,8 +105,47 @@ func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Dura
 }
 
 // Acknowledge receipt and processing of a message
-func (d *Disque) Ack(messageId string) (err error) {
-	_, err = d.call("ACKJOB", redis.Args{}.Add(messageId))
+func (d *Disque) Ack(jobId string) (err error) {
+	_, err = d.call("ACKJOB", redis.Args{}.Add(jobId))
+	return
+}
+
+// Retrieve details for an existing job
+func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error) {
+	var jobDetailsMap []interface{}
+	if jobDetailsMap, err = redis.Values(d.call("SHOW", redis.Args{}.Add(jobId))); err == nil {
+		var repl, ttl, delay, retry, nextRequeueWithin, nextAwakeWithin int
+		var ctime int64
+		var nodesDelivered, nodesConfirmed []string
+
+		repl, err = redis.Int(jobDetailsMap[7], err)
+		ttl, err = redis.Int(jobDetailsMap[9], err)
+		ctime, err = redis.Int64(jobDetailsMap[11], err)
+		delay, err = redis.Int(jobDetailsMap[13], err)
+		retry, err = redis.Int(jobDetailsMap[15], err)
+		nodesDelivered, err = redis.Strings(jobDetailsMap[17], err)
+		nodesConfirmed, err = redis.Strings(jobDetailsMap[19], err)
+		nextRequeueWithin, err = redis.Int(jobDetailsMap[21], err)
+		nextAwakeWithin, err = redis.Int(jobDetailsMap[23], err)
+
+		if err == nil {
+			jobDetails = &JobDetails{
+				JobId:             string(jobDetailsMap[1].([]byte)),
+				QueueName:         string(jobDetailsMap[3].([]byte)),
+				State:             string(jobDetailsMap[5].([]byte)),
+				ReplicationFactor: repl,
+				TTL:               time.Duration(ttl) * time.Second,
+				CreatedAt:         time.Unix(0, ctime),
+				Delay:             time.Duration(delay) * time.Second,
+				Retry:             time.Duration(retry) * time.Second,
+				NodesDelivered:    nodesDelivered,
+				NodesConfirmed:    nodesConfirmed,
+				NextRequeueWithin: time.Duration(nextRequeueWithin/1000) * time.Second,
+				NextAwakeWithin:   time.Duration(nextAwakeWithin/1000) * time.Second,
+				Message:           string(jobDetailsMap[25].([]byte)),
+			}
+		}
+	}
 	return
 }
 
@@ -117,9 +172,9 @@ func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duratio
 		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", int64(timeout.Seconds()*1000), "COUNT", count, "FROM", queueName)); err == nil {
 			for _, job := range values {
 				if jobValues, err := redis.Strings(job, err); err == nil {
-					jobs = append(jobs, &Job{QueueName: jobValues[0], MessageId: jobValues[1], Message: jobValues[2]})
+					jobs = append(jobs, &Job{QueueName: jobValues[0], JobId: jobValues[1], Message: jobValues[2]})
 
-					// update stats using fragment of the message-id
+					// update stats using fragment of the job-id
 					statsKey := jobValues[1][2:10]
 					d.stats[statsKey] = d.stats[statsKey] + 1
 				}

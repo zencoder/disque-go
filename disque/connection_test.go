@@ -198,6 +198,38 @@ func (s *DisqueSuite) TestPushWithOptionsOnClosedConnection() {
 	assert.Nil(s.T(), err)
 }
 
+func (s *DisqueSuite) TestGetJobDetailsWithInvalidJobId() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	jobDetails, err := d.GetJobDetails("asdfasdfasdfbogus")
+	assert.NotNil(s.T(), err)
+	assert.Nil(s.T(), jobDetails)
+}
+
+func (s *DisqueSuite) TestGetJobDetails() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	jobId, err := d.Push("queue1", "asdf", time.Second)
+
+	assert.NotNil(s.T(), jobId)
+	assert.NotEqual(s.T(), "", jobId)
+	assert.Nil(s.T(), err)
+
+	var jobDetails *JobDetails
+	jobDetails, err = d.GetJobDetails(jobId)
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), jobDetails)
+
+	assert.NotNil(s.T(), jobDetails.CreatedAt)
+	assert.True(s.T(), time.Now().After(jobDetails.CreatedAt))
+	assert.Equal(s.T(), "asdf", jobDetails.Message)
+	assert.Equal(s.T(), jobId, jobDetails.JobId)
+}
+
 func (s *DisqueSuite) TestPush() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
@@ -248,7 +280,7 @@ func (s *DisqueSuite) TestQueueLength() {
 
 	var job *Job
 	job, err = d.Fetch("queue3", time.Second)
-	err = d.Ack(job.MessageId)
+	err = d.Ack(job.JobId)
 }
 
 func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
@@ -267,7 +299,7 @@ func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
 
 	var job *Job
 	job, err = d.Fetch("queue3", time.Second)
-	err = d.Ack(job.MessageId)
+	err = d.Ack(job.JobId)
 }
 
 func (s *DisqueSuite) TestFetch() {
@@ -283,7 +315,7 @@ func (s *DisqueSuite) TestFetch() {
 	assert.NotNil(s.T(), job)
 	assert.Equal(s.T(), "queue4", job.QueueName)
 	assert.Equal(s.T(), "asdf", job.Message)
-	assert.Equal(s.T(), job.MessageId[2:10], d.prefix)
+	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
 }
 
@@ -343,11 +375,11 @@ func (s *DisqueSuite) TestAck() {
 	job, err := d.Fetch("queue2", time.Second)
 	assert.Nil(s.T(), err)
 
-	err = d.Ack(job.MessageId)
+	err = d.Ack(job.JobId)
 	assert.Nil(s.T(), err)
 }
 
-func (s *DisqueSuite) TestAckWithMalformedMessageId() {
+func (s *DisqueSuite) TestAckWithMalformedJobId() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
