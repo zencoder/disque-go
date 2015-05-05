@@ -208,6 +208,30 @@ func (s *DisqueSuite) TestGetJobDetailsWithInvalidJobId() {
 	assert.Nil(s.T(), jobDetails)
 }
 
+func (s *DisqueSuite) TestGetJobDetailsWithAckdJobId() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	jobId, err := d.Push("queue5000", "asdf", time.Second)
+
+	var jobDetails *JobDetails
+	jobDetails, err = d.GetJobDetails(jobId)
+	assert.NotNil(s.T(), jobDetails)
+	assert.Nil(s.T(), err)
+
+	var job *Job
+	job, err = d.Fetch("queue5000", time.Second)
+	assert.Equal(s.T(), jobId, job.JobId)
+	assert.NotNil(s.T(), job)
+	assert.Nil(s.T(), err)
+	d.Ack(job.JobId)
+
+	jobDetails, err = d.GetJobDetails(job.JobId)
+	assert.NotNil(s.T(), err)
+	assert.Nil(s.T(), jobDetails)
+}
+
 func (s *DisqueSuite) TestGetJobDetails() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
