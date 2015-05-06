@@ -417,6 +417,7 @@ func BenchmarkPush(b *testing.B) {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		d.Push("queueBenchPush", "asdf", time.Second)
 	}
@@ -429,6 +430,7 @@ func BenchmarkPushAsync(b *testing.B) {
 	options := make(map[string]string)
 	options["ASYNC"] = "true"
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		d.PushWithOptions("queueBenchPushAsync", "asdf", time.Second, options)
 	}
@@ -445,5 +447,18 @@ func BenchmarkFetch(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		d.Fetch("queueBenchFetch", time.Second)
+	}
+}
+
+func BenchmarkGetJobDetails(b *testing.B) {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	jobId, _ := d.Push("queueGetJobDetailsBench", "asdf", time.Second)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d.GetJobDetails(jobId)
 	}
 }
