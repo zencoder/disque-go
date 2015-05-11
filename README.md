@@ -44,7 +44,7 @@ d, err = p.Get(context.Background())   // get a connection from the pool
 p.Put(d)            // return a connection to the pool
 ```
 
-To shutdown the connection pool, such as when the application is existing, invoke the `Close` function:
+To shutdown the connection pool, such as when the application is exiting, invoke the `Close` function:
 ```go
 p.Close()           // close the pool, waits for all connections to be returned
 ```
