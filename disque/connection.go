@@ -110,6 +110,12 @@ func (d *Disque) Ack(jobId string) (err error) {
 	return
 }
 
+// Del delete Job onto Disque cluster thanks the JobId
+func (d *Disque) Del(jobID string) (err error) {
+	_, err = d.call("DELJOB", redis.Args{}.Add(jobID))
+	return
+}
+
 // Retrieve details for an existing job
 func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error) {
 	var jobDetailsMap []interface{}

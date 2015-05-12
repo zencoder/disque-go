@@ -412,6 +412,27 @@ func (s *DisqueSuite) TestAckWithMalformedJobId() {
 	assert.NotNil(s.T(), err)
 }
 
+func (s *DisqueSuite) TestDeleteJob() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	jobId, err := d.Push("queue3", "todelete", time.Second)
+	assert.Nil(s.T(), err)
+
+	err = d.Del(jobId)
+	assert.Nil(s.T(), err)
+}
+
+func (s *DisqueSuite) TestDeleteJobWithUnknownJobId() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+
+	err := d.Del("badId")
+	assert.NotNil(s.T(), err)
+}
+
 func BenchmarkPush(b *testing.B) {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
