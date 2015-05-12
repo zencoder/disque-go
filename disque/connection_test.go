@@ -420,8 +420,14 @@ func (s *DisqueSuite) TestDeleteJob() {
 	jobId, err := d.Push("queue3", "todelete", time.Second)
 	assert.Nil(s.T(), err)
 
-	err = d.Del(jobId)
+	err = d.Delete(jobId)
 	assert.Nil(s.T(), err)
+
+	// verify that the job details are unretrievable after deleting the job
+	var jobDetails *JobDetails
+	jobDetails, err = d.GetJobDetails(jobId)
+	assert.Nil(s.T(), jobDetails)
+	assert.NotNil(s.T(), err)
 }
 
 func (s *DisqueSuite) TestDeleteJobWithUnknownJobId() {
@@ -429,7 +435,7 @@ func (s *DisqueSuite) TestDeleteJobWithUnknownJobId() {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	err := d.Del("badId")
+	err := d.Delete("badId")
 	assert.NotNil(s.T(), err)
 }
 

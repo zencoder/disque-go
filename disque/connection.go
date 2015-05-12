@@ -110,8 +110,8 @@ func (d *Disque) Ack(jobId string) (err error) {
 	return
 }
 
-// Del delete Job onto Disque cluster thanks the JobId
-func (d *Disque) Del(jobID string) (err error) {
+// Delete a job that was enqueued on the cluster
+func (d *Disque) Delete(jobID string) (err error) {
 	_, err = d.call("DELJOB", redis.Args{}.Add(jobID))
 	return
 }
