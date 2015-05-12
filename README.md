@@ -115,6 +115,11 @@ var jobDetails *disque.JobDetails
 jobDetails, err = d.GetJobDetails(jobId)
 ```
 
+Enqueued messages can be deleted using their Job-Id:
+```go
+err = d.Delete(jobId)
+```
+
 Acknowledge receipt and processing of a message by invoking the `Ack` function:
 ```go
 err = d.Ack(job.JobId)
