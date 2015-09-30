@@ -51,17 +51,6 @@ func (d *DisquePool) Get(ctx context.Context) (conn *Disque, err error) {
 	return conn, err
 }
 
-// TryGet will return the next available resource. If none is available, and capacity
-// has not been reached, it will create a new one using the factory. Otherwise,
-// it will return nil with no error.
-func (d *DisquePool) TryGet() (conn *Disque, err error) {
-	var r pools.Resource
-	if r, err = d.pool.TryGet(); err == nil && r != nil {
-		conn = r.(*Disque)
-	}
-	return conn, err
-}
-
 // Put will return a resource to the pool. For every successful Get,
 // a corresponding Put is required. If you no longer need a resource,
 // you will need to call Put(nil) instead of returning the closed resource.
@@ -73,7 +62,7 @@ func (d *DisquePool) Put(conn *Disque) {
 // Close empties the pool calling Close on all its resources.
 // You can call Close while there are outstanding resources.
 // It waits for all resources to be returned (Put).
-// After a Close, Get and TryGet are not allowed.
+// After a Close, Get is not allowed.
 func (d *DisquePool) Close() {
 	d.pool.Close()
 }
