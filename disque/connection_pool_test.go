@@ -49,8 +49,7 @@ func (s *DisquePoolSuite) TestWithResizedPool() {
 	assert.NotNil(s.T(), c1)
 
 	var c2 *Disque
-	c2, err = d.TryGet()
-	assert.Nil(s.T(), c2)
+	c2, err = d.Get(context.Background())
 	assert.Nil(s.T(), err)
 
 	// return the connection
@@ -58,9 +57,9 @@ func (s *DisquePoolSuite) TestWithResizedPool() {
 
 	// resize the pool
 	d.SetCapacity(2)
-	c1, err = d.TryGet()
+	c1, err = d.Get(context.Background())
 	assert.Nil(s.T(), err)
-	c2, err = d.TryGet()
+	c2, err = d.Get(context.Background())
 	assert.Nil(s.T(), err)
 	d.Put(c1)
 	d.Put(c2)
