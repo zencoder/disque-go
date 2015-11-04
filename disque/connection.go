@@ -29,19 +29,21 @@ type Job struct {
 }
 
 type JobDetails struct {
-	JobId             string
-	QueueName         string
-	State             string
-	ReplicationFactor int
-	TTL               time.Duration
-	CreatedAt         time.Time
-	Delay             time.Duration
-	Retry             time.Duration
-	NodesDelivered    []string
-	NodesConfirmed    []string
-	NextRequeueWithin time.Duration
-	NextAwakeWithin   time.Duration
-	Message           string
+	JobId                string
+	QueueName            string
+	State                string
+	ReplicationFactor    int
+	TTL                  time.Duration
+	CreatedAt            time.Time
+	Delay                time.Duration
+	Retry                time.Duration
+	Nacks                int64
+	AdditionalDeliveries int64
+	NodesDelivered       []string
+	NodesConfirmed       []string
+	NextRequeueWithin    time.Duration
+	NextAwakeWithin      time.Duration
+	Message              string
 }
 
 // Instantiate a new Disque connection
@@ -121,7 +123,7 @@ func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error)
 	var jobDetailsMap []interface{}
 	if jobDetailsMap, err = redis.Values(d.call("SHOW", redis.Args{}.Add(jobId))); err == nil {
 		var repl, ttl, delay, retry, nextRequeueWithin, nextAwakeWithin int
-		var ctime int64
+		var ctime, nacks, additionalDeliveries int64
 		var nodesDelivered, nodesConfirmed []string
 
 		repl, err = redis.Int(jobDetailsMap[7], err)
@@ -129,26 +131,30 @@ func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error)
 		ctime, err = redis.Int64(jobDetailsMap[11], err)
 		delay, err = redis.Int(jobDetailsMap[13], err)
 		retry, err = redis.Int(jobDetailsMap[15], err)
-		nodesDelivered, err = redis.Strings(jobDetailsMap[17], err)
-		nodesConfirmed, err = redis.Strings(jobDetailsMap[19], err)
-		nextRequeueWithin, err = redis.Int(jobDetailsMap[21], err)
-		nextAwakeWithin, err = redis.Int(jobDetailsMap[23], err)
+		nacks, err = redis.Int64(jobDetailsMap[17], err)
+		additionalDeliveries, err = redis.Int64(jobDetailsMap[19], err)
+		nodesDelivered, err = redis.Strings(jobDetailsMap[21], err)
+		nodesConfirmed, err = redis.Strings(jobDetailsMap[23], err)
+		nextRequeueWithin, err = redis.Int(jobDetailsMap[25], err)
+		nextAwakeWithin, err = redis.Int(jobDetailsMap[27], err)
 
 		if err == nil {
 			jobDetails = &JobDetails{
-				JobId:             string(jobDetailsMap[1].([]byte)),
-				QueueName:         string(jobDetailsMap[3].([]byte)),
-				State:             string(jobDetailsMap[5].([]byte)),
-				ReplicationFactor: repl,
-				TTL:               time.Duration(ttl) * time.Second,
-				CreatedAt:         time.Unix(0, ctime),
-				Delay:             time.Duration(delay) * time.Second,
-				Retry:             time.Duration(retry) * time.Second,
-				NodesDelivered:    nodesDelivered,
-				NodesConfirmed:    nodesConfirmed,
-				NextRequeueWithin: time.Duration(nextRequeueWithin/1000) * time.Second,
-				NextAwakeWithin:   time.Duration(nextAwakeWithin/1000) * time.Second,
-				Message:           string(jobDetailsMap[25].([]byte)),
+				JobId:                string(jobDetailsMap[1].([]byte)),
+				QueueName:            string(jobDetailsMap[3].([]byte)),
+				State:                string(jobDetailsMap[5].([]byte)),
+				ReplicationFactor:    repl,
+				TTL:                  time.Duration(ttl) * time.Second,
+				CreatedAt:            time.Unix(0, ctime),
+				Delay:                time.Duration(delay) * time.Second,
+				Retry:                time.Duration(retry) * time.Second,
+				Nacks:                nacks,
+				AdditionalDeliveries: additionalDeliveries,
+				NodesDelivered:       nodesDelivered,
+				NodesConfirmed:       nodesConfirmed,
+				NextRequeueWithin:    time.Duration(nextRequeueWithin/1000) * time.Second,
+				NextAwakeWithin:      time.Duration(nextAwakeWithin/1000) * time.Second,
+				Message:              string(jobDetailsMap[29].([]byte)),
 			}
 		}
 	}

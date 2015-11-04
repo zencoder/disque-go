@@ -7,11 +7,11 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/garyburd/redigo/internal",
-			"Rev": "535138d7bcd717d6531c701ef5933d98b1866257"
+			"Rev": "6ece6e0a09f28cc399b21550cbf37ab39ba63cce"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
-			"Rev": "535138d7bcd717d6531c701ef5933d98b1866257"
+			"Rev": "6ece6e0a09f28cc399b21550cbf37ab39ba63cce"
 		},
 		{
 			"ImportPath": "github.com/golang/glog",
