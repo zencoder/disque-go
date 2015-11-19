@@ -39,31 +39,3 @@ func (s *DisquePoolSuite) TestWithPoolOfOne() {
 	c, err = d.Get(context.Background())
 	assert.NotNil(s.T(), err)
 }
-
-func (s *DisquePoolSuite) TestWithResizedPool() {
-	hosts := []string{"127.0.0.1:7711"}
-	d := NewDisquePool(hosts, 1000, 1, 2, time.Hour)
-
-	c1, err := d.Get(context.Background())
-	assert.Nil(s.T(), err)
-	assert.NotNil(s.T(), c1)
-
-	var c2 *Disque
-	c2, err = d.Get(context.Background())
-	assert.Nil(s.T(), err)
-
-	// return the connection
-	d.Put(c1)
-
-	// resize the pool
-	d.SetCapacity(2)
-	c1, err = d.Get(context.Background())
-	assert.Nil(s.T(), err)
-	c2, err = d.Get(context.Background())
-	assert.Nil(s.T(), err)
-	d.Put(c1)
-	d.Put(c2)
-
-	d.Close()
-	assert.True(s.T(), d.IsClosed())
-}
