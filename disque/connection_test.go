@@ -341,6 +341,60 @@ func (s *DisqueSuite) TestFetch() {
 	assert.Equal(s.T(), "asdf", job.Message)
 	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
+
+	// verify the NACK count in job details
+	var jobDetails *JobDetails
+	jobDetails, err = d.GetJobDetails(job.JobId)
+	assert.Equal(s.T(), 0, jobDetails.Nacks)
+}
+
+func (s *DisqueSuite) TestFetchAndNack() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	_, err := d.Push("queue6", "asdf", time.Second)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, d.stats[d.prefix])
+
+	// fetch an item
+	job, err := d.Fetch("queue6", time.Second)
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), job)
+
+	// send a NACK for the job, putting it back on the queue
+	err = d.Nack(job.JobId)
+	assert.Nil(s.T(), err)
+
+	// FETCH 2
+	job, err = d.Fetch("queue6", time.Second)
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), job)
+	assert.Equal(s.T(), "queue6", job.QueueName)
+	assert.Equal(s.T(), "asdf", job.Message)
+	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
+	assert.Equal(s.T(), 2, d.stats[d.prefix])
+
+	// verify the NACK count in job details
+	var jobDetails *JobDetails
+	jobDetails, err = d.GetJobDetails(job.JobId)
+	assert.Equal(s.T(), 1, jobDetails.Nacks)
+
+	// send a NACK for the job, putting it back on the queue
+	err = d.Nack(job.JobId)
+	assert.Nil(s.T(), err)
+
+	// FETCH 3
+	job, err = d.Fetch("queue6", time.Second)
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), job)
+	assert.Equal(s.T(), "queue6", job.QueueName)
+	assert.Equal(s.T(), "asdf", job.Message)
+	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
+	assert.Equal(s.T(), 3, d.stats[d.prefix])
+
+	// verify the NACK count in job details
+	jobDetails, err = d.GetJobDetails(job.JobId)
+	assert.Equal(s.T(), 2, jobDetails.Nacks)
 }
 
 func (s *DisqueSuite) TestFetchWithNoJobs() {
