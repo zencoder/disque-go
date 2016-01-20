@@ -112,6 +112,12 @@ func (d *Disque) Ack(jobId string) (err error) {
 	return
 }
 
+// Tells Disque to put back the job in the queue ASAP.
+func (d *Disque) Nack(jobId string) (err error) {
+	_, err = d.call("NACK", redis.Args{}.Add(jobId))
+	return
+}
+
 // Delete a job that was enqueued on the cluster
 func (d *Disque) Delete(jobId string) (err error) {
 	_, err = d.call("DELJOB", redis.Args{}.Add(jobId))
