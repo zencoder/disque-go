@@ -3,7 +3,7 @@
 [Go](https://www.golang.org) client for the [Disque server](https://github.com/antirez/disque)
 
 ###Dependencies
-The [Redigo](https://github.com/garyburd/redigo) Redis client and the [YouTube Vitess](https://github.com/youtube/vitess/) resource pooling implementation are the only runtime dependencies used by `disque-go`. Dependencies are managed with [Godep](https://github.com/tools/godep).
+The [Redigo](https://github.com/garyburd/redigo) Redis client and the [YouTube Vitess](https://github.com/youtube/vitess/) resource pooling implementation are the only runtime dependencies used by `disque-go`. Dependencies are managed with [Glide](https://github.com/Masterminds/glide).
 
 ###Documentation
  * [API Reference](http://godoc.org/github.com/zencoder/disque-go/disque)
