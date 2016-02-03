@@ -1,23 +1,19 @@
-GO ?= godep go
+export GO15VENDOREXPERIMENT = 1
 COVERAGEDIR = coverage
 
 all: build test cover
-godep:
-	go get github.com/tools/godep
-godep-save:
-	godep save ./...
 build:
-	$(GO) build -v ./...
+	go build -v ./disque
 fmt:
-	$(GO) fmt ./...
+	go fmt ./disque
 test:
 	if [ ! -d coverage ]; then mkdir coverage; fi
-	$(GO) test -v ./... -race -cover -coverprofile=$(COVERAGEDIR)/disque.coverprofile
+	go test -v ./disque -race -cover -coverprofile=$(COVERAGEDIR)/disque.coverprofile
 cover:
-	$(GO) tool cover -html=$(COVERAGEDIR)/disque.coverprofile -o $(COVERAGEDIR)/disque.html
+	go tool cover -html=$(COVERAGEDIR)/disque.coverprofile -o $(COVERAGEDIR)/disque.html
 tc: test cover
 bench:
-	$(GO) test ./... -bench .
+	go test ./disque -bench .
 clean:
-	$(GO) clean
+	go clean
 	rm -rf coverage/
