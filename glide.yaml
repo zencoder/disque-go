@@ -13,13 +13,6 @@ import:
   - assert
   - require
   - suite
-- package: github.com/youtube/vitess
-  version: 71ea23e7fd3619357903194ba3f25e860ed52751
-  subpackages:
-  - go/acl
-  - go/cache
-  - go/pools
-  - go/sync2
 - package: golang.org/x/net
   version: a8c61998a557a37435f719980da368469c10bfed
   subpackages:

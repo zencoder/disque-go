@@ -1,5 +1,5 @@
-hash: 18750c46ce17b2df8cf993d7c2f306037c23389c2851e9b10f74daa8d65e9d28
-updated: 2016-02-02T16:04:27.794706781-08:00
+hash: 8a90b704beb79b5d31298682e56ee9128cf357c341de960bda28ca1255d0bb66
+updated: 2016-02-03T11:14:04.63543735-08:00
 imports:
 - name: github.com/garyburd/redigo
   version: 6ece6e0a09f28cc399b21550cbf37ab39ba63cce
@@ -16,13 +16,6 @@ imports:
   - assert
   - require
   - suite
-- name: github.com/youtube/vitess
-  version: 71ea23e7fd3619357903194ba3f25e860ed52751
-  subpackages:
-  - go/acl
-  - go/cache
-  - go/pools
-  - go/sync2
 - name: golang.org/x/net
   version: a8c61998a557a37435f719980da368469c10bfed
   subpackages:
