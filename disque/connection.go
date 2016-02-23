@@ -9,6 +9,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+// Disque connection type
 type Disque struct {
 	servers []string
 	cycle   int
@@ -22,14 +23,16 @@ type Disque struct {
 	host   string
 }
 
+// Job represents a Disque job
 type Job struct {
 	QueueName string
-	JobId     string
+	JobID     string
 	Message   string
 }
 
+// JobDetails contains details for a specific Disque job
 type JobDetails struct {
-	JobId                string
+	JobID                string
 	QueueName            string
 	State                string
 	ReplicationFactor    int
@@ -46,7 +49,7 @@ type JobDetails struct {
 	Message              string
 }
 
-// Instantiate a new Disque connection
+// NewDisque instantiates a new Disque connection
 func NewDisque(servers []string, cycle int) *Disque {
 	return &Disque{
 		servers: servers,
@@ -68,16 +71,16 @@ func (d *Disque) Close() {
 }
 
 // Push job onto a Disque queue with the default set of options
-func (d *Disque) Push(queueName string, job string, timeout time.Duration) (jobId string, err error) {
+func (d *Disque) Push(queueName string, job string, timeout time.Duration) (jobID string, err error) {
 	args := redis.Args{}.
 		Add(queueName).
 		Add(job).
 		Add(int64(timeout.Seconds() * 1000))
-	jobId, err = redis.String(d.call("ADDJOB", args))
+	jobID, err = redis.String(d.call("ADDJOB", args))
 	return
 }
 
-// Push job onto a Disque queue with options given in the options map
+// PushWithOptions pushes a job onto a Disque queue with options given in the options map
 //
 //     ADDJOB queue_name job <ms-timeout>
 //       [REPLICATE <count>]
@@ -92,42 +95,42 @@ func (d *Disque) Push(queueName string, job string, timeout time.Duration) (jobI
 //     options["DELAY"] = 30
 //     options["ASYNC"] = true
 //     d.PushWithOptions("queue_name", "job", 1*time.Second, options)
-func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Duration, options map[string]string) (jobId string, err error) {
+func (d *Disque) PushWithOptions(queueName string, job string, timeout time.Duration, options map[string]string) (jobID string, err error) {
 	if len(options) == 0 {
-		jobId, err = d.Push(queueName, job, timeout)
+		jobID, err = d.Push(queueName, job, timeout)
 	} else {
 		args := redis.Args{}.
 			Add(queueName).
 			Add(job).
 			Add(int64(timeout.Seconds() * 1000)).
 			AddFlat(optionsToArguments(options))
-		jobId, err = redis.String(d.call("ADDJOB", args))
+		jobID, err = redis.String(d.call("ADDJOB", args))
 	}
 	return
 }
 
-// Acknowledge receipt and processing of a message
-func (d *Disque) Ack(jobId string) (err error) {
-	_, err = d.call("ACKJOB", redis.Args{}.Add(jobId))
+// Ack will acknowledge receipt and processing of a message
+func (d *Disque) Ack(jobID string) (err error) {
+	_, err = d.call("ACKJOB", redis.Args{}.Add(jobID))
 	return
 }
 
-// Tells Disque to put back the job in the queue ASAP.
-func (d *Disque) Nack(jobId string) (err error) {
-	_, err = d.call("NACK", redis.Args{}.Add(jobId))
+// Nack instructs Disque to put back the job in the queue ASAP.
+func (d *Disque) Nack(jobID string) (err error) {
+	_, err = d.call("NACK", redis.Args{}.Add(jobID))
 	return
 }
 
 // Delete a job that was enqueued on the cluster
-func (d *Disque) Delete(jobId string) (err error) {
-	_, err = d.call("DELJOB", redis.Args{}.Add(jobId))
+func (d *Disque) Delete(jobID string) (err error) {
+	_, err = d.call("DELJOB", redis.Args{}.Add(jobID))
 	return
 }
 
-// Retrieve details for an existing job
-func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error) {
+// GetJobDetails will retrieve details for an existing job
+func (d *Disque) GetJobDetails(jobID string) (jobDetails *JobDetails, err error) {
 	var jobDetailsMap []interface{}
-	if jobDetailsMap, err = redis.Values(d.call("SHOW", redis.Args{}.Add(jobId))); err == nil {
+	if jobDetailsMap, err = redis.Values(d.call("SHOW", redis.Args{}.Add(jobID))); err == nil {
 		var repl, ttl, delay, retry, nextRequeueWithin, nextAwakeWithin int
 		var ctime, nacks, additionalDeliveries int64
 		var nodesDelivered, nodesConfirmed []string
@@ -146,7 +149,7 @@ func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error)
 
 		if err == nil {
 			jobDetails = &JobDetails{
-				JobId:                string(jobDetailsMap[1].([]byte)),
+				JobID:                string(jobDetailsMap[1].([]byte)),
 				QueueName:            string(jobDetailsMap[3].([]byte)),
 				State:                string(jobDetailsMap[5].([]byte)),
 				ReplicationFactor:    repl,
@@ -167,7 +170,7 @@ func (d *Disque) GetJobDetails(jobId string) (jobDetails *JobDetails, err error)
 	return
 }
 
-// Retrieve length of queue
+// QueueLength will retrieve length of queue
 func (d *Disque) QueueLength(queueName string) (queueLength int, err error) {
 	return redis.Int(d.call("QLEN", redis.Args{}.Add(queueName)))
 }
@@ -183,14 +186,14 @@ func (d *Disque) Fetch(queueName string, timeout time.Duration) (job *Job, err e
 	return
 }
 
-// Fetch jobs from a Disque queue.
+// FetchMultiple will retrieve multiple jobs from a Disque queue.
 func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
 	jobs = make([]*Job, 0)
 	if err = d.pickClient(); err == nil {
 		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", int64(timeout.Seconds()*1000), "COUNT", count, "FROM", queueName)); err == nil {
 			for _, job := range values {
 				if jobValues, err := redis.Strings(job, err); err == nil {
-					jobs = append(jobs, &Job{QueueName: jobValues[0], JobId: jobValues[1], Message: jobValues[2]})
+					jobs = append(jobs, &Job{QueueName: jobValues[0], JobID: jobValues[1], Message: jobValues[2]})
 
 					// update stats using fragment of the job-id
 					statsKey := jobValues[1][2:10]
@@ -229,19 +232,19 @@ func (d *Disque) pickClient() (err error) {
 		sortedHosts := reverseSortMapByValue(d.stats)
 
 		if len(sortedHosts) > 0 {
-			optimalHostId := sortedHosts[0].Key
-			if optimalHostId != d.prefix {
+			optimalHostID := sortedHosts[0].Key
+			if optimalHostID != d.prefix {
 				// a different optimal host has been discovered
-				if val, ok := d.nodes[optimalHostId]; ok {
+				if val, ok := d.nodes[optimalHostID]; ok {
 					// close old main client connection if it exists
 					if d.client != nil {
 						d.client.Close()
 					}
 
 					// configure main client
-					if d.client, err = redis.Dial("tcp", d.nodes[optimalHostId]); err == nil {
+					if d.client, err = redis.Dial("tcp", d.nodes[optimalHostID]); err == nil {
 						// keep track of selected node
-						d.prefix = optimalHostId
+						d.prefix = optimalHostID
 						d.host = val
 
 						// clear stats
@@ -290,9 +293,8 @@ func (d *Disque) explore() (err error) {
 					}
 				}
 				return err
-			} else {
-				log.Printf("Error returned when querying for cluster nodes on host: %s, exception: %s", host, err)
 			}
+			log.Printf("Error returned when querying for cluster nodes on host: %s, exception: %s", host, err)
 		} else {
 			log.Printf("Error while exploring connection to host: %s, exception: %s", host, err)
 		}

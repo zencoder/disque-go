@@ -159,10 +159,10 @@ func (s *DisqueSuite) TestPushWithEmptyOptions() {
 	d.Initialize()
 	options := make(map[string]string)
 
-	jobId, err := d.PushWithOptions("queue1", "asdf", time.Second, options)
+	jobID, err := d.PushWithOptions("queue1", "asdf", time.Second, options)
 
-	assert.NotNil(s.T(), jobId)
-	assert.NotEqual(s.T(), "", jobId)
+	assert.NotNil(s.T(), jobID)
+	assert.NotEqual(s.T(), "", jobID)
 	assert.Nil(s.T(), err)
 }
 
@@ -174,10 +174,10 @@ func (s *DisqueSuite) TestPushWithOptions() {
 	options["TTL"] = "60"
 	options["ASYNC"] = "true"
 
-	jobId, err := d.PushWithOptions("queue1", "asdf", time.Second, options)
+	jobID, err := d.PushWithOptions("queue1", "asdf", time.Second, options)
 
-	assert.NotNil(s.T(), jobId)
-	assert.NotEqual(s.T(), "", jobId)
+	assert.NotNil(s.T(), jobID)
+	assert.NotEqual(s.T(), "", jobID)
 	assert.Nil(s.T(), err)
 }
 
@@ -191,14 +191,14 @@ func (s *DisqueSuite) TestPushWithOptionsOnClosedConnection() {
 	options["ASYNC"] = "true"
 
 	// should explore Disque cluster again, reconnecting automatically
-	jobId, err := d.PushWithOptions("queue1", "asdf", time.Second, options)
+	jobID, err := d.PushWithOptions("queue1", "asdf", time.Second, options)
 
-	assert.NotNil(s.T(), jobId)
-	assert.NotEqual(s.T(), "", jobId)
+	assert.NotNil(s.T(), jobID)
+	assert.NotEqual(s.T(), "", jobID)
 	assert.Nil(s.T(), err)
 }
 
-func (s *DisqueSuite) TestGetJobDetailsWithInvalidJobId() {
+func (s *DisqueSuite) TestGetJobDetailsWithInvalidJobID() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
@@ -208,26 +208,26 @@ func (s *DisqueSuite) TestGetJobDetailsWithInvalidJobId() {
 	assert.Nil(s.T(), jobDetails)
 }
 
-func (s *DisqueSuite) TestGetJobDetailsWithAckdJobId() {
+func (s *DisqueSuite) TestGetJobDetailsWithAckdJobID() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	jobId, err := d.Push("queue5000", "asdf", time.Second)
+	jobID, err := d.Push("queue5000", "asdf", time.Second)
 
 	var jobDetails *JobDetails
-	jobDetails, err = d.GetJobDetails(jobId)
+	jobDetails, err = d.GetJobDetails(jobID)
 	assert.NotNil(s.T(), jobDetails)
 	assert.Nil(s.T(), err)
 
 	var job *Job
 	job, err = d.Fetch("queue5000", time.Second)
-	assert.Equal(s.T(), jobId, job.JobId)
+	assert.Equal(s.T(), jobID, job.JobID)
 	assert.NotNil(s.T(), job)
 	assert.Nil(s.T(), err)
-	d.Ack(job.JobId)
+	d.Ack(job.JobID)
 
-	jobDetails, err = d.GetJobDetails(job.JobId)
+	jobDetails, err = d.GetJobDetails(job.JobID)
 	assert.NotNil(s.T(), err)
 	assert.Nil(s.T(), jobDetails)
 }
@@ -237,21 +237,21 @@ func (s *DisqueSuite) TestGetJobDetails() {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	jobId, err := d.Push("queue1", "asdf", time.Second)
+	jobID, err := d.Push("queue1", "asdf", time.Second)
 
-	assert.NotNil(s.T(), jobId)
-	assert.NotEqual(s.T(), "", jobId)
+	assert.NotNil(s.T(), jobID)
+	assert.NotEqual(s.T(), "", jobID)
 	assert.Nil(s.T(), err)
 
 	var jobDetails *JobDetails
-	jobDetails, err = d.GetJobDetails(jobId)
+	jobDetails, err = d.GetJobDetails(jobID)
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), jobDetails)
 
 	assert.NotNil(s.T(), jobDetails.CreatedAt)
 	assert.True(s.T(), time.Now().After(jobDetails.CreatedAt))
 	assert.Equal(s.T(), "asdf", jobDetails.Message)
-	assert.Equal(s.T(), jobId, jobDetails.JobId)
+	assert.Equal(s.T(), jobID, jobDetails.JobID)
 }
 
 func (s *DisqueSuite) TestPush() {
@@ -259,10 +259,10 @@ func (s *DisqueSuite) TestPush() {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	jobId, err := d.Push("queue1", "asdf", time.Second)
+	jobID, err := d.Push("queue1", "asdf", time.Second)
 
-	assert.NotNil(s.T(), jobId)
-	assert.NotEqual(s.T(), "", jobId)
+	assert.NotNil(s.T(), jobID)
+	assert.NotEqual(s.T(), "", jobID)
 	assert.Nil(s.T(), err)
 }
 
@@ -304,7 +304,7 @@ func (s *DisqueSuite) TestQueueLength() {
 
 	var job *Job
 	job, err = d.Fetch("queue3", time.Second)
-	err = d.Ack(job.JobId)
+	err = d.Ack(job.JobID)
 }
 
 func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
@@ -323,7 +323,7 @@ func (s *DisqueSuite) TestQueueLengthOnClosedConnection() {
 
 	var job *Job
 	job, err = d.Fetch("queue3", time.Second)
-	err = d.Ack(job.JobId)
+	err = d.Ack(job.JobID)
 }
 
 func (s *DisqueSuite) TestFetch() {
@@ -339,12 +339,12 @@ func (s *DisqueSuite) TestFetch() {
 	assert.NotNil(s.T(), job)
 	assert.Equal(s.T(), "queue4", job.QueueName)
 	assert.Equal(s.T(), "asdf", job.Message)
-	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
+	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
 
 	// verify the NACK count in job details
 	var jobDetails *JobDetails
-	jobDetails, err = d.GetJobDetails(job.JobId)
+	jobDetails, err = d.GetJobDetails(job.JobID)
 	assert.Equal(s.T(), 0, jobDetails.Nacks)
 }
 
@@ -362,7 +362,7 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	assert.NotNil(s.T(), job)
 
 	// send a NACK for the job, putting it back on the queue
-	err = d.Nack(job.JobId)
+	err = d.Nack(job.JobID)
 	assert.Nil(s.T(), err)
 
 	// FETCH 2
@@ -371,16 +371,16 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	assert.NotNil(s.T(), job)
 	assert.Equal(s.T(), "queue6", job.QueueName)
 	assert.Equal(s.T(), "asdf", job.Message)
-	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
+	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 2, d.stats[d.prefix])
 
 	// verify the NACK count in job details
 	var jobDetails *JobDetails
-	jobDetails, err = d.GetJobDetails(job.JobId)
+	jobDetails, err = d.GetJobDetails(job.JobID)
 	assert.Equal(s.T(), 1, jobDetails.Nacks)
 
 	// send a NACK for the job, putting it back on the queue
-	err = d.Nack(job.JobId)
+	err = d.Nack(job.JobID)
 	assert.Nil(s.T(), err)
 
 	// FETCH 3
@@ -389,11 +389,11 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	assert.NotNil(s.T(), job)
 	assert.Equal(s.T(), "queue6", job.QueueName)
 	assert.Equal(s.T(), "asdf", job.Message)
-	assert.Equal(s.T(), job.JobId[2:10], d.prefix)
+	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 3, d.stats[d.prefix])
 
 	// verify the NACK count in job details
-	jobDetails, err = d.GetJobDetails(job.JobId)
+	jobDetails, err = d.GetJobDetails(job.JobID)
 	assert.Equal(s.T(), 2, jobDetails.Nacks)
 }
 
@@ -453,11 +453,11 @@ func (s *DisqueSuite) TestAck() {
 	job, err := d.Fetch("queue2", time.Second)
 	assert.Nil(s.T(), err)
 
-	err = d.Ack(job.JobId)
+	err = d.Ack(job.JobID)
 	assert.Nil(s.T(), err)
 }
 
-func (s *DisqueSuite) TestAckWithMalformedJobId() {
+func (s *DisqueSuite) TestAckWithMalformedJobID() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
@@ -471,20 +471,20 @@ func (s *DisqueSuite) TestDeleteJob() {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	jobId, err := d.Push("queue3", "todelete", time.Second)
+	jobID, err := d.Push("queue3", "todelete", time.Second)
 	assert.Nil(s.T(), err)
 
-	err = d.Delete(jobId)
+	err = d.Delete(jobID)
 	assert.Nil(s.T(), err)
 
 	// verify that the job details are unretrievable after deleting the job
 	var jobDetails *JobDetails
-	jobDetails, err = d.GetJobDetails(jobId)
+	jobDetails, err = d.GetJobDetails(jobID)
 	assert.Nil(s.T(), jobDetails)
 	assert.NotNil(s.T(), err)
 }
 
-func (s *DisqueSuite) TestDeleteJobWithUnknownJobId() {
+func (s *DisqueSuite) TestDeleteJobWithUnknownJobID() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
@@ -536,10 +536,10 @@ func BenchmarkGetJobDetails(b *testing.B) {
 	d := NewDisque(hosts, 1000)
 	d.Initialize()
 
-	jobId, _ := d.Push("queueGetJobDetailsBench", "asdf", time.Second)
+	jobID, _ := d.Push("queueGetJobDetailsBench", "asdf", time.Second)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		d.GetJobDetails(jobId)
+		d.GetJobDetails(jobID)
 	}
 }
