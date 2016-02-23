@@ -1,4 +1,4 @@
-# disque-go [![Circle CI](https://circleci.com/gh/zencoder/disque-go.svg?style=svg)](https://circleci.com/gh/zencoder/disque-go)
+# disque-go [![Circle CI](https://circleci.com/gh/zencoder/disque-go.svg?style=svg)](https://circleci.com/gh/zencoder/disque-go) [![Go Report Card](https://goreportcard.com/badge/github.com/zencoder/disque-go)](https://goreportcard.com/report/github.com/zencoder/disque-go)
 
 [Go](https://www.golang.org) client for the [Disque server](https://github.com/antirez/disque)
 
