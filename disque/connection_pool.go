@@ -7,13 +7,14 @@ import (
 	"golang.org/x/net/context"
 )
 
-type DisquePool struct {
+// Pool represents a pool of Disque connections
+type Pool struct {
 	servers []string
 	cycle   int
 	pool    *pools.ResourcePool
 }
 
-// NewDisquePool creates a new pool of Disque connections.
+// NewPool creates a new pool of Disque connections.
 // capacity is the number of active resources in the pool:
 // there can be up to 'capacity' of these at a given time.
 // maxCapacity specifies the extent to which the pool can be resized
@@ -21,12 +22,12 @@ type DisquePool struct {
 // You cannot resize the pool beyond maxCapacity.
 // If a resource is unused beyond idleTimeout, it's discarded.
 // An idleTimeout of 0 means that there is no timeout.
-func NewDisquePool(servers []string, cycle int, capacity int, maxCapacity int, idleTimeout time.Duration) (d *DisquePool) {
-	d = &DisquePool{
+func NewPool(servers []string, cycle int, capacity int, maxCapacity int, idleTimeout time.Duration) (p *Pool) {
+	p = &Pool{
 		servers: servers,
 		cycle:   cycle,
 	}
-	d.pool = pools.NewResourcePool(d.poolFactory, capacity, maxCapacity, idleTimeout)
+	p.pool = pools.NewResourcePool(p.poolFactory, capacity, maxCapacity, idleTimeout)
 	return
 }
 
@@ -36,16 +37,16 @@ func NewDisquePool(servers []string, cycle int, capacity int, maxCapacity int, i
 // to be shrunk, SetCapacity waits till the necessary
 // number of resources are returned to the pool.
 // A SetCapacity of 0 is equivalent to closing the ResourcePool.
-func (d *DisquePool) SetCapacity(capacity int) {
-	d.pool.SetCapacity(capacity)
+func (p *Pool) SetCapacity(capacity int) {
+	p.pool.SetCapacity(capacity)
 }
 
 // Get will return the next available resource. If capacity
 // has not been reached, it will create a new one using the factory. Otherwise,
 // it will wait until the supplied context expires.
-func (d *DisquePool) Get(ctx context.Context) (conn *Disque, err error) {
+func (p *Pool) Get(ctx context.Context) (conn *Disque, err error) {
 	var r pools.Resource
-	if r, err = d.pool.Get(ctx); err == nil && r != nil {
+	if r, err = p.pool.Get(ctx); err == nil && r != nil {
 		conn = r.(*Disque)
 	}
 	return conn, err
@@ -55,25 +56,25 @@ func (d *DisquePool) Get(ctx context.Context) (conn *Disque, err error) {
 // a corresponding Put is required. If you no longer need a resource,
 // you will need to call Put(nil) instead of returning the closed resource.
 // The will eventually cause a new resource to be created in its place.
-func (d *DisquePool) Put(conn *Disque) {
-	d.pool.Put(conn)
+func (p *Pool) Put(conn *Disque) {
+	p.pool.Put(conn)
 }
 
 // Close empties the pool calling Close on all its resources.
 // You can call Close while there are outstanding resources.
 // It waits for all resources to be returned (Put).
 // After a Close, Get is not allowed.
-func (d *DisquePool) Close() {
-	d.pool.Close()
+func (p *Pool) Close() {
+	p.pool.Close()
 }
 
 // IsClosed returns true if the resource pool is closed.
-func (d *DisquePool) IsClosed() (closed bool) {
-	return d.pool.IsClosed()
+func (p *Pool) IsClosed() (closed bool) {
+	return p.pool.IsClosed()
 }
 
-func (d *DisquePool) poolFactory() (r pools.Resource, err error) {
-	conn := NewDisque(d.servers, d.cycle)
+func (p *Pool) poolFactory() (r pools.Resource, err error) {
+	conn := NewDisque(p.servers, p.cycle)
 	err = conn.Initialize()
 
 	return conn, err

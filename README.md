@@ -29,8 +29,8 @@ cycle := 1000                       // check connection stats every 1000 Fetch's
 capacity := 5                       // initial capacity of the pool
 maxCapacity := 10                   // max capacity that the pool can be resized to
 idleTimeout := 15 * time.Minute     // timeout for idle connections
-var p *disque.DisquePool
-p = disque.NewDisquePool(hosts, cycle, capacity, maxCapacity, idleTimeout)
+var p *disque.Pool
+p = disque.NewPool(hosts, cycle, capacity, maxCapacity, idleTimeout)
 ```
 
 Next, get a handle to a connection from the pool, specifying a [context](https://godoc.org/golang.org/x/net/context) that controls how long to wait for a connection to be retrieved:
@@ -80,14 +80,14 @@ You can push a job to a Disque queue by invoking the `Push` or `PushWithOptions`
 queueName := "queue_name"
 jobDetails := "job"
 timeout := time.Second          // take no long than 1 second to enqueue the message
-var jobId string
-jobId, err = d.Push(queueName, jobDetails, timeout)
+var jobID string
+jobID, err = d.Push(queueName, jobDetails, timeout)
 
 // Push with custom options
 options = make(map[string]string)
 options["TTL"] = "60"            // 60 second TTL on the job message
 options["ASYNC"] = "true"        // push the message asynchronously
-jobId, err = d.PushWithOptions(queueName, jobDetails, timeout, options)
+jobID, err = d.PushWithOptions(queueName, jobDetails, timeout, options)
 ```
 
 Find the length of a queue using the `QueueLength` function:
@@ -112,17 +112,17 @@ jobs, err = d.FetchMultiple(queueName, count, timeout)   // retrieve up to 5 Job
 Retrieve details for an enqueued job before it has been acknowledged:
 ```go
 var jobDetails *disque.JobDetails
-jobDetails, err = d.GetJobDetails(jobId)
+jobDetails, err = d.GetJobDetails(jobID)
 ```
 
 Enqueued messages can be deleted using their Job-Id:
 ```go
-err = d.Delete(jobId)
+err = d.Delete(jobID)
 ```
 
 Acknowledge receipt and processing of a message by invoking the `Ack` function:
 ```go
-err = d.Ack(job.JobId)
+err = d.Ack(job.JobID)
 ```
 
 That's it (for now)!
