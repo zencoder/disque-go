@@ -190,7 +190,12 @@ func (d *Disque) Fetch(queueName string, timeout time.Duration) (job *Job, err e
 func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
 	jobs = make([]*Job, 0)
 	if err = d.pickClient(); err == nil {
-		if values, err := redis.Values(d.client.Do("GETJOB", "TIMEOUT", int64(timeout.Seconds()*1000), "COUNT", count, "FROM", queueName)); err == nil {
+		args := redis.Args{}.
+			Add("TIMEOUT").Add(int64(timeout.Seconds() * 1000)).
+			Add("COUNT").Add(count).
+			Add("FROM").Add(queueName)
+
+		if values, err := redis.Values(d.call("GETJOB", args)); err == nil {
 			for _, job := range values {
 				if jobValues, err := redis.Strings(job, err); err == nil {
 					jobs = append(jobs, &Job{QueueName: jobValues[0], JobID: jobValues[1], Message: jobValues[2]})
