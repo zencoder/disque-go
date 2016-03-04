@@ -207,6 +207,7 @@ func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duratio
 			}
 		}
 	}
+	d.count += count
 	return jobs, err
 }
 

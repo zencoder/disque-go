@@ -341,6 +341,7 @@ func (s *DisqueSuite) TestFetch() {
 	assert.Equal(s.T(), "asdf", job.Message)
 	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
+	assert.Equal(s.T(), 1, d.count)
 
 	// verify the NACK count in job details
 	var jobDetails *JobDetails
@@ -422,10 +423,12 @@ func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 	jobs, err := d.FetchMultiple("queue5", 2, time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 2, len(jobs))
+	assert.Equal(s.T(), 2, d.count)
 
 	jobs, err = d.FetchMultiple("queue5", 2, time.Second)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1, len(jobs))
+	assert.Equal(s.T(), 4, d.count)
 }
 
 func (s *DisqueSuite) TestFetchMultipleWithNoJobs() {
