@@ -339,6 +339,8 @@ func (s *DisqueSuite) TestFetch() {
 	assert.NotNil(s.T(), job)
 	assert.Equal(s.T(), "queue4", job.QueueName)
 	assert.Equal(s.T(), "asdf", job.Message)
+	assert.Equal(s.T(), 0, job.Nacks)
+	assert.Equal(s.T(), 0, job.AdditionalDeliveries)
 	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 1, d.stats[d.prefix])
 	assert.Equal(s.T(), 1, d.count)
@@ -361,6 +363,7 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	job, err := d.Fetch("queue6", time.Second)
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), job)
+	s.Equal(0, job.Nacks)
 
 	// send a NACK for the job, putting it back on the queue
 	err = d.Nack(job.JobID)
@@ -374,6 +377,7 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	assert.Equal(s.T(), "asdf", job.Message)
 	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 2, d.stats[d.prefix])
+	s.Equal(1, job.Nacks)
 
 	// verify the NACK count in job details
 	var jobDetails *JobDetails
@@ -392,10 +396,13 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	assert.Equal(s.T(), "asdf", job.Message)
 	assert.Equal(s.T(), job.JobID[2:10], d.prefix)
 	assert.Equal(s.T(), 3, d.stats[d.prefix])
+	s.Equal(2, job.Nacks)
 
 	// verify the NACK count in job details
 	jobDetails, err = d.GetJobDetails(job.JobID)
 	assert.Equal(s.T(), 2, jobDetails.Nacks)
+
+	err = d.Ack(job.JobID)
 }
 
 func (s *DisqueSuite) TestFetchWithNoJobs() {

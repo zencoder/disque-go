@@ -25,9 +25,11 @@ type Disque struct {
 
 // Job represents a Disque job
 type Job struct {
-	QueueName string
-	JobID     string
-	Message   string
+	QueueName            string
+	JobID                string
+	Message              string
+	Nacks                int64
+	AdditionalDeliveries int64
 }
 
 // JobDetails contains details for a specific Disque job
@@ -193,15 +195,27 @@ func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duratio
 		args := redis.Args{}.
 			Add("TIMEOUT").Add(int64(timeout.Seconds() * 1000)).
 			Add("COUNT").Add(count).
+			Add("WITHCOUNTERS").
 			Add("FROM").Add(queueName)
 
 		if values, err := redis.Values(d.call("GETJOB", args)); err == nil {
 			for _, job := range values {
-				if jobValues, err := redis.Strings(job, err); err == nil {
-					jobs = append(jobs, &Job{QueueName: jobValues[0], JobID: jobValues[1], Message: jobValues[2]})
+				if jobValues, err := redis.Values(job, err); err == nil {
+					var nacks, additionalDeliveries int64
+					nacks, err = redis.Int64(jobValues[4], err)
+					additionalDeliveries, err = redis.Int64(jobValues[6], err)
+
+					j := &Job{
+						QueueName:            string(jobValues[0].([]byte)),
+						JobID:                string(jobValues[1].([]byte)),
+						Message:              string(jobValues[2].([]byte)),
+						Nacks:                nacks,
+						AdditionalDeliveries: additionalDeliveries,
+					}
+					jobs = append(jobs, j)
 
 					// update stats using fragment of the job-id
-					statsKey := jobValues[1][2:10]
+					statsKey := j.JobID[2:10]
 					d.stats[statsKey] = d.stats[statsKey] + 1
 				}
 			}
