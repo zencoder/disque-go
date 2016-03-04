@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/net/context"
 )
@@ -28,8 +27,8 @@ func (s *DisquePoolSuite) TestWithPoolOfOne() {
 	p := NewPool(hosts, 1000, 1, 1, time.Hour)
 
 	c, err := p.Get(context.Background())
-	assert.Nil(s.T(), err)
-	assert.NotNil(s.T(), c)
+	s.Nil(err)
+	s.NotNil(c)
 
 	// return the connection and close the pool
 	p.Put(c)
@@ -37,5 +36,5 @@ func (s *DisquePoolSuite) TestWithPoolOfOne() {
 
 	// try getting a connection from the closed pool
 	c, err = p.Get(context.Background())
-	assert.NotNil(s.T(), err)
+	s.NotNil(err)
 }
