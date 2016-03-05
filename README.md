@@ -38,10 +38,10 @@ Next, get a handle to a connection from the pool, specifying a [context](https:/
 var d *disque.Disque
 var err error
 d, err = p.Get(context.Background())   // get a connection from the pool
+defer p.Put(d)                         // return a connection to the pool
 
 ... (use the connection to interact with Disque)...
 
-p.Put(d)            // return a connection to the pool
 ```
 
 To shutdown the connection pool, such as when the application is exiting, invoke the `Close` function:
