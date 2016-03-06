@@ -55,9 +55,19 @@ func (p *Pool) Get(ctx context.Context) (conn *Disque, err error) {
 // Put will return a resource to the pool. For every successful Get,
 // a corresponding Put is required. If you no longer need a resource,
 // you will need to call Put(nil) instead of returning the closed resource.
-// The will eventually cause a new resource to be created in its place.
+// This will eventually cause a new resource to be created in its place.
 func (p *Pool) Put(conn *Disque) {
-	p.pool.Put(conn)
+	if conn == nil {
+		// Converting a concrete value (*Disque) into an interface value
+		// (pools.Resource) produces an interface value that is != nil, even if
+		// the concrete value was nil.
+		//
+		// Instead, we create a new nil value of type pools.Resource which is
+		// == nil, because it doesn't have a concrete type.
+		p.pool.Put(nil)
+	} else {
+		p.pool.Put(conn)
+	}
 }
 
 // Close empties the pool calling Close on all its resources.
