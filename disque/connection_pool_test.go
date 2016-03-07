@@ -38,3 +38,21 @@ func (s *DisquePoolSuite) TestWithPoolOfOne() {
 	c, err = p.Get(context.Background())
 	s.NotNil(err)
 }
+
+func (s *DisquePoolSuite) TestPutNil() {
+	hosts := []string{"127.0.0.1:7711"}
+	p := NewPool(hosts, 1000, 1, 1, time.Hour)
+
+	c, err := p.Get(context.Background())
+	s.Nil(err)
+	s.NotNil(c)
+
+	// Assume node or network failure here. c is now unusable and should not
+	// be returned to the pool.
+	p.Put(nil)
+
+	// Now we expect to Get a new connection
+	c, err = p.Get(context.Background())
+	s.Nil(err)
+	s.NotNil(c)
+}
