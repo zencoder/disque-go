@@ -52,6 +52,17 @@ func (p *Pool) Get(ctx context.Context) (conn *Disque, err error) {
 	return conn, err
 }
 
+// GetNoWait will return the next available resource. If none is available, and capacity
+// has not been reached, it will create a new one using the factory. Otherwise,
+// it will return nil with no error.
+func (p *Pool) GetNoWait() (conn *Disque, err error) {
+	var r pools.Resource
+	if r, err = p.pool.TryGet(); err == nil && r != nil {
+		conn = r.(*Disque)
+	}
+	return conn, err
+}
+
 // Put will return a resource to the pool. For every successful Get,
 // a corresponding Put is required. If you no longer need a resource,
 // you will need to call Put(nil) instead of returning the closed resource.
