@@ -10,8 +10,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/youtube/vitess/go/acl"
-	"github.com/youtube/vitess/go/cache"
+	"github.com/ezbuy/disque-go/pkg/acl"
+	"github.com/ezbuy/disque-go/pkg/cache"
 )
 
 // Consolidator consolidates duplicate queries from executing simulaneously

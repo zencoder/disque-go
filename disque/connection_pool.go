@@ -3,7 +3,7 @@ package disque
 import (
 	"time"
 
-	"github.com/youtube/vitess/go/pools"
+	"github.com/ezbuy/disque-go/pkg/pools"
 	"golang.org/x/net/context"
 )
 
