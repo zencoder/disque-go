@@ -9,3 +9,5 @@ require (
 	github.com/youtube/vitess v2.1.1+incompatible
 	golang.org/x/net v0.0.0-20150429055707-a8c61998a557
 )
+
+replace github.com/youtube/vitess => ./vendor/github.com/youtube/vitess
