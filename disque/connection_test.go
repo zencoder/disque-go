@@ -1,6 +1,7 @@
 package disque
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -338,8 +339,8 @@ func (s *DisqueSuite) TestFetch() {
 	s.NotNil(job)
 	s.Equal("queue4", job.QueueName)
 	s.Equal("asdf", job.Message)
-	s.Equal(0, job.Nacks)
-	s.Equal(0, job.AdditionalDeliveries)
+	s.Equal(int64(0), job.Nacks)
+	s.Equal(int64(0), job.AdditionalDeliveries)
 	s.Equal(job.JobID[2:10], d.prefix)
 	s.Equal(1, d.stats[d.prefix])
 	s.Equal(1, d.count)
@@ -347,7 +348,7 @@ func (s *DisqueSuite) TestFetch() {
 	// verify the NACK count in job details
 	var jobDetails *JobDetails
 	jobDetails, err = d.GetJobDetails(job.JobID)
-	s.Equal(0, jobDetails.Nacks)
+	s.Equal(int64(0), jobDetails.Nacks)
 }
 
 func (s *DisqueSuite) TestFetchAndNack() {
@@ -362,7 +363,7 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	job, err := d.Fetch("queue6", time.Second)
 	s.Nil(err)
 	s.NotNil(job)
-	s.Equal(0, job.Nacks)
+	s.Equal(int64(0), job.Nacks)
 
 	// send a NACK for the job, putting it back on the queue
 	err = d.Nack(job.JobID)
@@ -376,12 +377,12 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	s.Equal("asdf", job.Message)
 	s.Equal(job.JobID[2:10], d.prefix)
 	s.Equal(2, d.stats[d.prefix])
-	s.Equal(1, job.Nacks)
+	s.Equal(int64(1), job.Nacks)
 
 	// verify the NACK count in job details
 	var jobDetails *JobDetails
 	jobDetails, err = d.GetJobDetails(job.JobID)
-	s.Equal(1, jobDetails.Nacks)
+	s.Equal(int64(1), jobDetails.Nacks)
 
 	// send a NACK for the job, putting it back on the queue
 	err = d.Nack(job.JobID)
@@ -395,11 +396,11 @@ func (s *DisqueSuite) TestFetchAndNack() {
 	s.Equal("asdf", job.Message)
 	s.Equal(job.JobID[2:10], d.prefix)
 	s.Equal(3, d.stats[d.prefix])
-	s.Equal(2, job.Nacks)
+	s.EqualValues(2, job.Nacks)
 
 	// verify the NACK count in job details
 	jobDetails, err = d.GetJobDetails(job.JobID)
-	s.Equal(2, jobDetails.Nacks)
+	s.EqualValues(2, jobDetails.Nacks)
 
 	err = d.Ack(job.JobID)
 }
@@ -418,6 +419,47 @@ func (s *DisqueSuite) TestFetchWithNoJobs() {
 	s.Equal(0, d.stats[d.prefix])
 }
 
+func (s *DisqueSuite) TestFetchWithNoJobsWithNoHang() {
+	hosts := []string{"127.0.0.1:7711"}
+	d := NewDisque(hosts, 1000)
+	d.Initialize()
+	_, err := d.Push("queue4", "asdf", time.Second)
+	s.Nil(err)
+	s.Equal(0, d.stats[d.prefix])
+
+	ticker := time.NewTicker(3 * time.Second)
+	jobChan := make(chan bool)
+	rtChan := make(chan bool)
+	go func() {
+		for {
+			select {
+			case t := <-ticker.C:
+				log.Printf("ticker at %v", t.Second())
+				rtChan <- false
+				return
+			case <-jobChan:
+				log.Println("Sent rtChan")
+				rtChan <- true
+				return
+			}
+		}
+	}()
+
+	job, err := d.FetchMultipleNoHang("emptyqueue", 1, 3*time.Second)
+	log.Println("Sent JobChan")
+	s.Nil(err)
+	// job is the empty job, but not nil
+	s.NotNil(job)
+	jobChan <- true
+	ticker.Stop()
+	r := <-rtChan
+	if !r {
+		return
+	} else {
+		return
+	}
+}
+
 func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 	hosts := []string{"127.0.0.1:7711"}
 	d := NewDisque(hosts, 1000)
@@ -433,7 +475,7 @@ func (s *DisqueSuite) TestFetchWithMultipleJobs() {
 
 	jobs, err = d.FetchMultiple("queue5", 2, time.Second)
 	s.Nil(err)
-	s.Equal(1, len(jobs))
+	s.EqualValues(1, len(jobs))
 	s.Equal(4, d.count)
 }
 

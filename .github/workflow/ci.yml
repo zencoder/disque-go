@@ -1,0 +1,35 @@
+name: disque-go
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        go: [1.12,1.13,1.14]
+
+    runs-on: ubuntu-latest
+
+    container:
+        image: golang:${{ matrix.go }}-stretch
+
+    services:
+      disque:
+        image: quay.io/skidder/disque
+        ports:
+          - 7711:7711
+
+    steps:
+      - name: Test
+        run: |
+          make test
+      - name: Code Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.DSIQUE_GO_CODECOV_SECRET }}
+          file: disque.coverprofile

@@ -190,21 +190,36 @@ func (d *Disque) Fetch(queueName string, timeout time.Duration) (job *Job, err e
 
 // FetchMultiple will retrieve multiple jobs from a Disque queue.
 func (d *Disque) FetchMultiple(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
+	return d.fetch(queueName, count, timeout)
+}
+
+// FetchMultipleNoHang will retrieve multiple jobs from a Disque queue.
+// But it will work with NOHANG option.
+// Check disque doc for more details: https://github.com/antirez/disque#getjob-nohang-timeout-ms-timeout-count-count-withcounters-from-queue1-queue2--queuen
+func (d *Disque) FetchMultipleNoHang(queueName string, count int, timeout time.Duration) (jobs []*Job, err error) {
+	return d.fetch(queueName, count, timeout, noHangOption{})
+}
+
+func (d *Disque) fetch(queueName string, count int, timeout time.Duration, opts ...fetchOption) (jobs []*Job, err error) {
 	jobs = make([]*Job, 0)
 	if err = d.pickClient(); err == nil {
-		args := redis.Args{}.
-			Add("TIMEOUT").Add(int64(timeout.Seconds() * 1000)).
-			Add("COUNT").Add(count).
-			Add("WITHCOUNTERS").
-			Add("FROM").Add(queueName)
 
+		args := redis.Args{}
+		for _, opt := range withFetchOption(queueName, timeout, count, opts...) {
+			args = append(args, opt.Name())
+			if len(opt.Args()) == 0 {
+				continue
+			}
+			args = append(args, opt.Args()...)
+		}
 		if values, err := redis.Values(d.call("GETJOB", args)); err == nil {
 			for _, job := range values {
 				if jobValues, err := redis.Values(job, err); err == nil {
 					var nacks, additionalDeliveries int64
 					nacks, err = redis.Int64(jobValues[4], err)
+					// TODO: we should handle this redis type conversion error
 					additionalDeliveries, err = redis.Int64(jobValues[6], err)
-
+					// TODO: and this error
 					j := &Job{
 						QueueName:            string(jobValues[0].([]byte)),
 						JobID:                string(jobValues[1].([]byte)),

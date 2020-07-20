@@ -26,3 +26,4 @@ _testmain.go
 
 # Nodes file created by Disque server
 nodes.conf
+disque.coverprofile

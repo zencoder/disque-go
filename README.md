@@ -1,24 +1,25 @@
-# disque-go [![Circle CI](https://circleci.com/gh/zencoder/disque-go.svg?style=svg)](https://circleci.com/gh/zencoder/disque-go) [![Go Report Card](https://goreportcard.com/badge/github.com/zencoder/disque-go)](https://goreportcard.com/report/github.com/zencoder/disque-go) [![GoDoc](https://godoc.org/github.com/zencoder/disque-go/disque?status.svg)](https://godoc.org/github.com/zencoder/disque-go/disque)
+# disque-go
+
+[![codecov](https://codecov.io/gh/ezbuy/disque-go/branch/master/graph/badge.svg)](https://codecov.io/gh/ezbuy/disque-go)
+
+**NOTICE**: This repo is forked from [zencoder/disque-go](github.com/zencoder/disque-go), and move the disque with Go forward.
 
 [Go](https://www.golang.org) client for the [Disque server](https://github.com/antirez/disque)
 
-###Dependencies
-The [Redigo](https://github.com/garyburd/redigo) Redis client and the [YouTube Vitess](https://github.com/youtube/vitess/) resource pooling implementation are the only runtime dependencies used by `disque-go`. Dependencies are managed with [Glide](https://github.com/Masterminds/glide).
+### Documentation
+ * [API Reference](https://pkg.go.dev/github.com/ezbuy/disque-go/disque)
 
-###Documentation
- * [API Reference](http://godoc.org/github.com/zencoder/disque-go/disque)
-
-###Installation
+### Installation
 ```shell
-go get github.com/zencoder/disque-go/disque
+go get github.com/ezbuy/disque-go/disque
 ```
 
-###Usage
+### Usage
 #### Connection Pool
 Instantiate the pool as follows:
 ```go
 import (
-  "github.com/zencoder/disque-go/disque"
+  "github.com/ezbuy/disque-go/disque"
   "golang.org/x/net/context"
 )
 
@@ -49,11 +50,11 @@ To shutdown the connection pool, such as when the application is exiting, invoke
 p.Close()           // close the pool, waits for all connections to be returned
 ```
 
-####Single Connection
+#### Single Connection
 Begin by instantiating and initializing a Disque client connection:
 ```go
 import (
-  "github.com/zencoder/disque-go/disque"
+  "github.com/ezbuy/disque-go/disque"
 )
 
 ...
@@ -73,7 +74,7 @@ Close the Disque client connection when finished:
 err = d.Close()
 ```
 
-####Disque Operations
+#### Disque Operations
 You can push a job to a Disque queue by invoking the `Push` or `PushWithOptions` methods.
 ```go
 // Push with default settings
@@ -127,5 +128,5 @@ err = d.Ack(job.JobID)
 
 That's it (for now)!
 
-###License
+### License
 `disque-go` is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
